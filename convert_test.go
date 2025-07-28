@@ -8,12 +8,12 @@ import (
 
 func TestToFloat8WithMode(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   float32
-		mode    ConversionMode
-		want    Float8
-		hasErr  bool
-		errMsg  string
+		name   string
+		input  float32
+		mode   ConversionMode
+		want   Float8
+		hasErr bool
+		errMsg string
 	}{
 		{
 			name:   "zero",
@@ -44,12 +44,12 @@ func TestToFloat8WithMode(t *testing.T) {
 			hasErr: false,
 		},
 		{
-			name:    "NaN in strict mode",
-			input:   float32(math.NaN()),
-			mode:    ModeStrict,
-			want:    0,
-			hasErr:  true,
-			errMsg:  "NaN not representable in float8",
+			name:   "NaN in strict mode",
+			input:  float32(math.NaN()),
+			mode:   ModeStrict,
+			want:   0,
+			hasErr: true,
+			errMsg: "NaN not representable in float8",
 		},
 		{
 			name:   "NaN in default mode",
@@ -66,12 +66,12 @@ func TestToFloat8WithMode(t *testing.T) {
 			hasErr: false,
 		},
 		{
-			name:    "overflow in strict mode",
+			name:   "overflow in strict mode",
 			input:  math.MaxFloat32,
 			mode:   ModeStrict,
-			want:    0,
-			hasErr:  true,
-			errMsg:  "overflow: value too large for float8",
+			want:   0,
+			hasErr: true,
+			errMsg: "overflow: value too large for float8",
 		},
 		{
 			name:   "underflow in default mode",
@@ -81,12 +81,12 @@ func TestToFloat8WithMode(t *testing.T) {
 			hasErr: false,
 		},
 		{
-			name:    "underflow in strict mode",
+			name:   "underflow in strict mode",
 			input:  math.SmallestNonzeroFloat32,
 			mode:   ModeStrict,
-			want:    0,
-			hasErr:  true,
-			errMsg:  "underflow: value too small for float8",
+			want:   0,
+			hasErr: true,
+			errMsg: "underflow: value too small for float8",
 		},
 		{
 			name:   "denormal number",
@@ -135,7 +135,7 @@ func TestToFloat8WithMode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ToFloat8WithMode(tt.input, tt.mode)
-			
+
 			if tt.hasErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
@@ -160,7 +160,7 @@ func TestToFloat8WithMode(t *testing.T) {
 func TestConversionTable(t *testing.T) {
 	// First disable any existing conversion table
 	DisableFastConversion()
-	
+
 	// Test that the table is nil initially
 	if conversionTable != nil {
 		t.Error("conversionTable should be nil initially")
@@ -169,31 +169,31 @@ func TestConversionTable(t *testing.T) {
 	// Test EnableFastConversion
 	t.Run("EnableFastConversion", func(t *testing.T) {
 		EnableFastConversion()
-		
+
 		if conversionTable == nil {
 			t.Error("conversionTable should be initialized after EnableFastConversion")
 		}
-		
+
 		if len(conversionTable) != 256 {
 			t.Errorf("conversionTable length = %d, want 256", len(conversionTable))
 		}
-		
+
 		// Test a few values to ensure the table is populated correctly
 		testValues := []struct {
 			input  int
 			output float32
 			skip   bool // Skip comparison for values that might vary
 		}{
-			{0x00, 0.0, false},         // +0.0
-			{0x80, -0.0, false},        // -0.0
-			{0x3F, 1.0, true},          // 1.0 (approximate in float8)
-			{0xBF, -1.0, true},         // -1.0 (approximate in float8)
+			{0x00, 0.0, false},                   // +0.0
+			{0x80, float32(math.Copysign(0, -1)), false}, // -0.0
+			{0x3F, 1.0, true},                    // 1.0 (approximate in float8)
+			{0xBF, -1.0, true},                   // -1.0 (approximate in float8)
 			{0x78, float32(math.Inf(1)), false},  // +Inf (IEEE 754 E4M3FN)
 			{0xF8, float32(math.Inf(-1)), false}, // -Inf (IEEE 754 E4M3FN)
 			{0x7F, float32(math.NaN()), false},   // NaN (IEEE 754 E4M3FN)
 			{0xFF, float32(math.NaN()), false},   // NaN (IEEE 754 E4M3FN)
 		}
-		
+
 		for _, tv := range testValues {
 			if tv.skip {
 				continue // Skip values that are approximations
@@ -208,7 +208,7 @@ func TestConversionTable(t *testing.T) {
 	// Test DisableFastConversion
 	t.Run("DisableFastConversion", func(t *testing.T) {
 		DisableFastConversion()
-		
+
 		if conversionTable != nil {
 			t.Error("conversionTable should be nil after DisableFastConversion")
 		}
@@ -221,7 +221,7 @@ func TestParse(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error from Parse, got nil")
 	}
-	
+
 	expectedErr := "float8.parse: not implemented"
 	if err.Error() != expectedErr {
 		t.Errorf("unexpected error message: got %q, want %q", err.Error(), expectedErr)
@@ -236,7 +236,7 @@ func TestToSlice32EdgeCases(t *testing.T) {
 	if result != nil {
 		t.Errorf("ToSlice32([]) = %v, want nil", result)
 	}
-	
+
 	// Test non-empty slice
 	nonEmptySlice := []Float8{One(), FromInt(2), PositiveZero}
 	result2 := ToSlice32(nonEmptySlice)
@@ -254,12 +254,12 @@ func TestToSlice32EdgeCases(t *testing.T) {
 // TestToFloat8WithModeEdgeCases tests edge cases in ToFloat8WithMode to achieve 100% coverage
 func TestToFloat8WithModeEdgeCases(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   float32
-		mode    ConversionMode
-		want    Float8
-		hasErr  bool
-		errMsg  string
+		name   string
+		input  float32
+		mode   ConversionMode
+		want   Float8
+		hasErr bool
+		errMsg string
 	}{
 		// Test overflow in strict mode
 		{
@@ -309,7 +309,6 @@ func TestToFloat8WithModeEdgeCases(t *testing.T) {
 			want:   NegativeZero,
 			hasErr: false,
 		},
-
 	}
 
 	for _, tt := range tests {

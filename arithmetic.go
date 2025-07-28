@@ -373,7 +373,7 @@ func Less(a, b Float8) bool {
 	// Handle infinities
 	aInf := a.IsInf()
 	bInf := b.IsInf()
-	
+
 	if aInf && bInf {
 		// Both are infinities, compare signs
 		// -Inf < +Inf is true, +Inf < -Inf is false, same infinities are equal
@@ -565,7 +565,7 @@ func ScaleSlice(s []Float8, scalar Float8) []Float8 {
 //	s := []Float8{1.0, 2.0, 3.0, 4.0}
 //	sum := SumSlice(s) // Returns 10.0
 func SumSlice(s []Float8) Float8 {
-	var sum Float8 = PositiveZero
+	sum := PositiveZero
 	for _, v := range s {
 		sum = Add(sum, v)
 	}

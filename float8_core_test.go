@@ -24,27 +24,31 @@ func TestDefaultConfig(t *testing.T) {
 	}
 
 	// Verify default values
-	if config.EnableFastArithmetic {
-		t.Error("Expected EnableFastArithmetic to be false by default")
-	}
-	if config.EnableFastConversion {
-		t.Error("Expected EnableFastConversion to be false by default")
-	}
-	if config.DefaultMode != ModeDefault {
-		t.Errorf("Expected DefaultMode to be ModeDefault, got %v", config.DefaultMode)
-	}
-	if config.ArithmeticMode != ArithmeticAuto {
-		t.Errorf("Expected ArithmeticMode to be ArithmeticAuto, got %v", config.ArithmeticMode)
+	if config != nil {
+		if config.EnableFastArithmetic {
+			t.Error("Expected EnableFastArithmetic to be false by default")
+		}
+		if config.EnableFastConversion {
+			t.Error("Expected EnableFastConversion to be false by default")
+		}
+		if config.DefaultMode != ModeDefault {
+			t.Errorf("Expected DefaultMode to be ModeDefault, got %v", config.DefaultMode)
+		}
+		if config.ArithmeticMode != ArithmeticAuto {
+			t.Errorf("Expected ArithmeticMode to be ArithmeticAuto, got %v", config.ArithmeticMode)
+		}
+	} else {
+		t.Error("DefaultConfig() returned nil")
 	}
 }
 
 func TestGetMemoryUsage(t *testing.T) {
 	// Save the current configuration to restore it later
 	origConfig := DefaultConfig()
-	
+
 	// Restore the original configuration after the test
 	defer Configure(origConfig)
-	
+
 	tests := []struct {
 		name           string
 		config         *Config
@@ -88,10 +92,10 @@ func TestGetMemoryUsage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Apply the test configuration
 			Configure(tt.config)
-			
+
 			// Get the memory usage
 			memUsage := GetMemoryUsage()
-			
+
 			// Verify the memory usage matches expectations
 			if memUsage != tt.expectedMemory {
 				t.Errorf("GetMemoryUsage() = %d, want %d", memUsage, tt.expectedMemory)
@@ -105,7 +109,7 @@ func TestGetVersion(t *testing.T) {
 	if version == "" {
 		t.Error("Empty version string")
 	}
-	
+
 	// Version should be in format X.Y.Z
 	if version != "2.0.0" {
 		t.Errorf("Unexpected version: %s", version)
@@ -243,7 +247,7 @@ func TestDebugInfo(t *testing.T) {
 	if info == nil {
 		t.Error("DebugInfo() returned nil")
 	}
-	
+
 	// Check for version key which should always be present
 	if _, exists := info["version"]; !exists {
 		t.Error("DebugInfo() missing version key")
