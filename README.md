@@ -1,7 +1,6 @@
 # float8
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/zerfoo/float16.svg)](https://pkg.go.dev/github.com/zerfoo/float8)
-[![Go Report Card](https://goreportcard.com/badge/github.com/zerfoo/float16)](https://goreportcard.com/report/github.com/zerfoo/float8)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A high-performance Go library implementing IEEE 754 FP8 E4M3FN format for 8-bit floating-point arithmetic, commonly used in machine learning applications for reduced-precision computations.
