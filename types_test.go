@@ -39,7 +39,7 @@ func TestGoString(t *testing.T) {
 		want string
 	}{
 		{"zero", PositiveZero, "float8.FromBits(0x00)"},
-		{"one", FromInt(1), "float8.FromBits(0x38)"}, // 0x38 is 1.0 in this float8 format
+		{"one", FromInt(1), "float8.FromBits(0x38)"},           // 0x38 is 1.0 in this float8 format
 		{"negative one", FromInt(-1), "float8.FromBits(0xb8)"}, // 0xB8 is -1.0
 	}
 
@@ -60,9 +60,9 @@ func TestBits(t *testing.T) {
 	}{
 		{"zero", PositiveZero, 0x00},
 		{"negative zero", NegativeZero, 0x80},
-		{"one", FromInt(1), 0x38}, // 0x38 is 1.0 in this float8 format
-		{"negative one", FromInt(-1), 0xB8}, // 0xB8 is -1.0
-		{"infinity", PositiveInfinity, 0x78}, // IEEE 754 E4M3FN: 0x78 is +Inf
+		{"one", FromInt(1), 0x38},                     // 0x38 is 1.0 in this float8 format
+		{"negative one", FromInt(-1), 0xB8},           // 0xB8 is -1.0
+		{"infinity", PositiveInfinity, 0x78},          // IEEE 754 E4M3FN: 0x78 is +Inf
 		{"negative infinity", NegativeInfinity, 0xF8}, // IEEE 754 E4M3FN: 0xF8 is -Inf
 	}
 
@@ -83,9 +83,9 @@ func TestFromBits(t *testing.T) {
 	}{
 		{"zero", 0x00, PositiveZero},
 		{"negative zero", 0x80, NegativeZero},
-		{"one", 0x38, FromInt(1)}, // 0x38 is 1.0 in this float8 format
-		{"negative one", 0xB8, FromInt(-1)}, // 0xB8 is -1.0
-		{"infinity", 0x78, PositiveInfinity}, // IEEE 754 E4M3FN: 0x78 is +Inf
+		{"one", 0x38, FromInt(1)},                     // 0x38 is 1.0 in this float8 format
+		{"negative one", 0xB8, FromInt(-1)},           // 0xB8 is -1.0
+		{"infinity", 0x78, PositiveInfinity},          // IEEE 754 E4M3FN: 0x78 is +Inf
 		{"negative infinity", 0xF8, NegativeInfinity}, // IEEE 754 E4M3FN: 0xF8 is -Inf
 	}
 

@@ -184,14 +184,14 @@ func TestConversionTable(t *testing.T) {
 			output float32
 			skip   bool // Skip comparison for values that might vary
 		}{
-			{0x00, 0.0, false},                   // +0.0
+			{0x00, 0.0, false},                           // +0.0
 			{0x80, float32(math.Copysign(0, -1)), false}, // -0.0
-			{0x3F, 1.0, true},                    // 1.0 (approximate in float8)
-			{0xBF, -1.0, true},                   // -1.0 (approximate in float8)
-			{0x78, float32(math.Inf(1)), false},  // +Inf (IEEE 754 E4M3FN)
-			{0xF8, float32(math.Inf(-1)), false}, // -Inf (IEEE 754 E4M3FN)
-			{0x7F, float32(math.NaN()), false},   // NaN (IEEE 754 E4M3FN)
-			{0xFF, float32(math.NaN()), false},   // NaN (IEEE 754 E4M3FN)
+			{0x3F, 1.0, true},                            // 1.0 (approximate in float8)
+			{0xBF, -1.0, true},                           // -1.0 (approximate in float8)
+			{0x78, float32(math.Inf(1)), false},          // +Inf (IEEE 754 E4M3FN)
+			{0xF8, float32(math.Inf(-1)), false},         // -Inf (IEEE 754 E4M3FN)
+			{0x7F, float32(math.NaN()), false},           // NaN (IEEE 754 E4M3FN)
+			{0xFF, float32(math.NaN()), false},           // NaN (IEEE 754 E4M3FN)
 		}
 
 		for _, tv := range testValues {

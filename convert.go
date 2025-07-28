@@ -40,10 +40,10 @@ func ToFloat8(f32 float32) Float8 {
 //   - NaN is handled according to the conversion mode
 //
 // For finite numbers, the conversion follows these steps:
-//   1. Extract sign, exponent, and mantissa from the float32
-//   2. Adjust the exponent for the Float8 format (E4M3FN)
-//   3. Round the mantissa to 3 bits (plus implicit leading bit)
-//   4. Handle overflow/underflow according to the conversion mode
+//  1. Extract sign, exponent, and mantissa from the float32
+//  2. Adjust the exponent for the Float8 format (E4M3FN)
+//  3. Round the mantissa to 3 bits (plus implicit leading bit)
+//  4. Handle overflow/underflow according to the conversion mode
 //
 // Returns the converted Float8 value and an error if the conversion fails in strict mode.
 func ToFloat8WithMode(f32 float32, mode ConversionMode) (Float8, error) {
@@ -51,9 +51,9 @@ func ToFloat8WithMode(f32 float32, mode ConversionMode) (Float8, error) {
 	if f32 == 0.0 {
 		// Check the sign bit to distinguish between +0.0 and -0.0
 		if math.Signbit(float64(f32)) {
-			return NegativeZero, nil  // -0.0
+			return NegativeZero, nil // -0.0
 		}
-		return PositiveZero, nil  // +0.0
+		return PositiveZero, nil // +0.0
 	}
 
 	if math.IsInf(float64(f32), 0) {
