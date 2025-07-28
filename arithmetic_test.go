@@ -110,7 +110,7 @@ func TestLess(t *testing.T) {
 				// If a < b is true, then b < a should be false and vice versa
 				result2 := Less(tt.b, tt.a)
 				if result && result2 {
-					t.Errorf("Both Less(%v, %v) and Less(%v, %v) returned true", 
+					t.Errorf("Both Less(%v, %v) and Less(%v, %v) returned true",
 						tt.a, tt.b, tt.b, tt.a)
 				}
 			}
@@ -174,7 +174,7 @@ func TestAddSlice(t *testing.T) {
 			}
 
 			for i := range result {
-				if !(result[i] == tt.expected[i] || (result[i].IsNaN() && tt.expected[i].IsNaN())) {
+				if result[i] != tt.expected[i] && !(result[i].IsNaN() && tt.expected[i].IsNaN()) {
 					t.Errorf("At index %d: expected %v, got %v", i, tt.expected[i], result[i])
 				}
 			}
@@ -234,17 +234,17 @@ func TestDivisionEdgeCases(t *testing.T) {
 		{"negative inf / negative inf", NegativeInfinity, NegativeInfinity, NaN},
 		{"positive inf / negative inf", PositiveInfinity, NegativeInfinity, NaN},
 		{"negative inf / positive inf", NegativeInfinity, PositiveInfinity, NaN},
-		
+
 		// Test finite / infinity = 0 with proper sign
 		{"positive / positive inf", FromInt(5), PositiveInfinity, PositiveZero},
 		{"negative / positive inf", FromInt(-5), PositiveInfinity, NegativeZero},
 		{"positive / negative inf", FromInt(5), NegativeInfinity, NegativeZero},
 		{"negative / negative inf", FromInt(-5), NegativeInfinity, PositiveZero},
-		
+
 		// Test overflow cases that result in infinity (using max values)
 		{"max positive / small positive", ToFloat8(448.0), ToFloat8(0.0625), PositiveInfinity},
 		{"max negative / small positive", ToFloat8(-448.0), ToFloat8(0.0625), NegativeInfinity},
-		
+
 		// Test cases that trigger overflow detection in float32 division
 		{"large positive / tiny positive", ToFloat8(240.0), ToFloat8(0.0078125), PositiveInfinity},
 		{"large negative / tiny positive", ToFloat8(-240.0), ToFloat8(0.0078125), NegativeInfinity},
