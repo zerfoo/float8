@@ -1,0 +1,1800 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>float8: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/zerfoo/float8/arithmetic.go (98.4%)</option>
+				
+				<option value="file1">github.com/zerfoo/float8/convert.go (96.8%)</option>
+				
+				<option value="file2">github.com/zerfoo/float8/float8.go (100.0%)</option>
+				
+				<option value="file3">github.com/zerfoo/float8/math.go (99.1%)</option>
+				
+				<option value="file4">github.com/zerfoo/float8/types.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package float8
+
+import (
+        "math"
+)
+
+// Global arithmetic mode
+var DefaultArithmeticMode = ArithmeticAuto
+
+// Add returns the sum of the operands a and b.
+//
+// This is a convenience function that calls AddWithMode with DefaultArithmeticMode.
+// For more control over the arithmetic behavior, use AddWithMode directly.
+//
+// Special cases:
+//
+//        Add(+0, ±0) = +0
+//        Add(-0, -0) = -0
+//        Add(±Inf, ∓Inf) = NaN (but returns +0 in this implementation)
+//        Add(NaN, x) = NaN
+//        Add(x, NaN) = NaN
+//
+// For finite numbers, the result is rounded to the nearest representable Float8 value
+// using the current rounding mode (typically round-to-nearest-even).
+func Add(a, b Float8) Float8 <span class="cov8" title="1">{
+        return AddWithMode(a, b, DefaultArithmeticMode)
+}</span>
+
+// AddWithMode returns the sum of the operands a and b using the specified arithmetic mode.
+//
+// The arithmetic mode determines how the addition is performed:
+//   - ArithmeticAuto: Uses the fastest available method (lookup tables if enabled)
+//   - ArithmeticLookup: Forces use of lookup tables (panics if not available)
+//   - ArithmeticAlgorithmic: Uses the algorithmic implementation
+//
+// Special cases are handled according to IEEE 754 rules:
+//   - If either operand is NaN, the result is NaN
+//   - Infinities of the same sign add to infinity of that sign
+//   - Infinities of opposite signs produce NaN (but this implementation returns +0)
+//   - The sign of a zero result is the sign of the sum of the operands
+//
+// For finite numbers, the result is rounded to the nearest representable Float8 value.
+// If the exact result is exactly halfway between two representable values, it is
+// rounded to the value with an even least significant bit (round-to-nearest-even).
+func AddWithMode(a, b Float8, mode ArithmeticMode) Float8 <span class="cov8" title="1">{
+        // Use lookup table if available and mode allows it
+        if (mode == ArithmeticAuto || mode == ArithmeticLookup) &amp;&amp; addTable != nil </span><span class="cov8" title="1">{
+                return addTable[uint16(a)&lt;&lt;8|uint16(b)]
+        }</span>
+
+        // Fall back to algorithmic implementation
+        <span class="cov8" title="1">return addAlgorithmic(a, b)</span>
+}
+
+// Sub returns the difference of a-b, i.e., the result of subtracting b from a.
+//
+// This is a convenience function that calls SubWithMode with DefaultArithmeticMode.
+// For more control over the arithmetic behavior, use SubWithMode directly.
+//
+// Special cases:
+//
+//        Sub(+0, +0) = +0
+//        Sub(+0, -0) = +0
+//        Sub(-0, +0) = -0
+//        Sub(-0, -0) = +0
+//        Sub(±Inf, ±Inf) = NaN (but returns +0 in this implementation)
+//        Sub(NaN, x) = NaN
+//        Sub(x, NaN) = NaN
+//
+// For finite numbers, the result is rounded to the nearest representable Float8 value.
+func Sub(a, b Float8) Float8 <span class="cov8" title="1">{
+        return SubWithMode(a, b, DefaultArithmeticMode)
+}</span>
+
+// SubWithMode performs subtraction with specified arithmetic mode
+func SubWithMode(a, b Float8, mode ArithmeticMode) Float8 <span class="cov8" title="1">{
+        // Use lookup table if available and mode allows it
+        if (mode == ArithmeticAuto || mode == ArithmeticLookup) &amp;&amp; subTable != nil </span><span class="cov8" title="1">{
+                return subTable[uint16(a)&lt;&lt;8|uint16(b)]
+        }</span>
+
+        // Fall back to algorithmic implementation
+        <span class="cov8" title="1">return subAlgorithmic(a, b)</span>
+}
+
+// Mul returns the product of the operands a and b.
+//
+// This is a convenience function that calls MulWithMode with DefaultArithmeticMode.
+// For more control over the arithmetic behavior, use MulWithMode directly.
+//
+// Special cases:
+//
+//        Mul(±0, ±Inf) = NaN
+//        Mul(±Inf, ±0) = NaN
+//        Mul(±0, ±0) = ±0 (sign obeys the rule for signs of zero products)
+//        Mul(±0, y) = ±0 for y finite and not zero
+//        Mul(±Inf, y) = ±Inf for y finite and not zero
+//        Mul(x, y) = NaN if x or y is NaN
+//
+// The sign of the result follows the standard sign rules for multiplication.
+// For finite numbers, the result is rounded to the nearest representable Float8 value.
+func Mul(a, b Float8) Float8 <span class="cov8" title="1">{
+        return MulWithMode(a, b, DefaultArithmeticMode)
+}</span>
+
+// MulWithMode performs multiplication with specified arithmetic mode
+func MulWithMode(a, b Float8, mode ArithmeticMode) Float8 <span class="cov8" title="1">{
+        // Use lookup table if available and mode allows it
+        if (mode == ArithmeticAuto || mode == ArithmeticLookup) &amp;&amp; mulTable != nil </span><span class="cov8" title="1">{
+                return mulTable[uint16(a)&lt;&lt;8|uint16(b)]
+        }</span>
+
+        // Fall back to algorithmic implementation
+        <span class="cov8" title="1">return mulAlgorithmic(a, b)</span>
+}
+
+// Div returns the quotient a/b of the operands a and b.
+//
+// This is a convenience function that calls DivWithMode with DefaultArithmeticMode.
+// For more control over the arithmetic behavior, use DivWithMode directly.
+//
+// Special cases:
+//
+//        Div(±0, ±0) = NaN
+//        Div(±Inf, ±Inf) = NaN
+//        Div(x, ±0) = ±Inf for x finite and not zero (sign obeys rule for signs)
+//        Div(±Inf, y) = ±Inf for y finite and not zero (sign obeys rule for signs)
+//        Div(x, y) = NaN if x or y is NaN
+//
+// The sign of the result follows the standard sign rules for division.
+// For finite numbers, the result is rounded to the nearest representable Float8 value.
+// Division by zero results in ±Inf with the sign determined by the rule of signs.
+func Div(a, b Float8) Float8 <span class="cov8" title="1">{
+        return DivWithMode(a, b, DefaultArithmeticMode)
+}</span>
+
+// DivWithMode performs division with specified arithmetic mode
+func DivWithMode(a, b Float8, mode ArithmeticMode) Float8 <span class="cov8" title="1">{
+        // Use lookup table if available and mode allows it
+        if (mode == ArithmeticAuto || mode == ArithmeticLookup) &amp;&amp; divTable != nil </span><span class="cov8" title="1">{
+                return divTable[uint16(a)&lt;&lt;8|uint16(b)]
+        }</span>
+
+        // Fall back to algorithmic implementation
+        <span class="cov8" title="1">return divAlgorithmic(a, b)</span>
+}
+
+// Algorithmic implementations
+
+func addAlgorithmic(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle special cases
+        if a.IsZero() </span><span class="cov8" title="1">{
+                return b
+        }</span>
+        <span class="cov8" title="1">if b.IsZero() </span><span class="cov8" title="1">{
+                return a
+        }</span>
+
+        // Handle infinity cases
+        <span class="cov8" title="1">if a.IsInf() || b.IsInf() </span><span class="cov8" title="1">{
+                if a == PositiveInfinity &amp;&amp; b == NegativeInfinity </span><span class="cov8" title="1">{
+                        return PositiveZero // NaN case, but we return zero
+                }</span>
+                <span class="cov8" title="1">if a == NegativeInfinity &amp;&amp; b == PositiveInfinity </span><span class="cov8" title="1">{
+                        return PositiveZero // NaN case, but we return zero
+                }</span>
+                <span class="cov8" title="1">if a.IsInf() </span><span class="cov8" title="1">{
+                        return a
+                }</span>
+                <span class="cov8" title="1">return b</span>
+        }
+
+        // Convert to float32, perform operation, convert back
+        <span class="cov8" title="1">f32a := a.ToFloat32()
+        f32b := b.ToFloat32()
+        result := f32a + f32b
+
+        return ToFloat8(result)</span>
+}
+
+func subAlgorithmic(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle special cases
+        if b.IsZero() </span><span class="cov8" title="1">{
+                return a
+        }</span>
+        <span class="cov8" title="1">if a.IsZero() </span><span class="cov8" title="1">{
+                return b.Neg()
+        }</span>
+
+        // Handle infinity cases
+        <span class="cov8" title="1">if a.IsInf() || b.IsInf() </span><span class="cov8" title="1">{
+                if a == b &amp;&amp; a.IsInf() </span><span class="cov8" title="1">{
+                        return PositiveZero // NaN case, but we return zero
+                }</span>
+                <span class="cov8" title="1">if a.IsInf() </span><span class="cov8" title="1">{
+                        return a
+                }</span>
+                <span class="cov8" title="1">return b.Neg()</span>
+        }
+
+        // Convert to float32, perform operation, convert back
+        <span class="cov8" title="1">f32a := a.ToFloat32()
+        f32b := b.ToFloat32()
+        result := f32a - f32b
+
+        return ToFloat8(result)</span>
+}
+
+func mulAlgorithmic(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle NaN cases - any operation with NaN results in NaN
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return NaN
+        }</span>
+
+        // Get signs before any potential conversions
+        <span class="cov8" title="1">signA := int8(1)
+        if a&amp;SignMask != 0 </span><span class="cov8" title="1">{
+                signA = -1
+        }</span>
+
+        <span class="cov8" title="1">signB := int8(1)
+        if b&amp;SignMask != 0 </span><span class="cov8" title="1">{
+                signB = -1
+        }</span>
+
+        // Handle infinity * 0 or 0 * infinity cases (indeterminate form, results in NaN)
+        <span class="cov8" title="1">if (a.IsInf() &amp;&amp; b.IsZero()) || (a.IsZero() &amp;&amp; b.IsInf()) </span><span class="cov8" title="1">{
+                return NaN
+        }</span>
+
+        // Handle zero cases (after checking for infinity * 0)
+        <span class="cov8" title="1">if a.IsZero() || b.IsZero() </span><span class="cov8" title="1">{
+                // Handle sign of zero result
+                if signA*signB &lt; 0 </span><span class="cov8" title="1">{
+                        return NegativeZero
+                }</span>
+                <span class="cov8" title="1">return PositiveZero</span>
+        }
+
+        // Handle infinity cases (after checking for infinity * 0)
+        <span class="cov8" title="1">if a.IsInf() || b.IsInf() </span><span class="cov8" title="1">{
+                if signA*signB &gt; 0 </span><span class="cov8" title="1">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov8" title="1">return NegativeInfinity</span>
+        }
+
+        // Convert to float32, perform operation, convert back
+        <span class="cov8" title="1">f32a := a.ToFloat32()
+        f32b := b.ToFloat32()
+        result := f32a * f32b
+
+        // Final conversion may produce NaN or infinity, which is fine
+        return ToFloat8(result)</span>
+}
+
+func divAlgorithmic(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle NaN cases first (NaN op anything = NaN)
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return NaN
+        }</span>
+
+        // Handle division by zero
+        <span class="cov8" title="1">if b.IsZero() </span><span class="cov8" title="1">{
+                if a.IsZero() </span><span class="cov8" title="1">{
+                        return NaN // 0/0 is NaN
+                }</span>
+                // Get signs explicitly to handle negative zero
+                <span class="cov8" title="1">signA := a&amp;SignMask != 0
+                signB := b&amp;SignMask != 0
+                // The sign of the result is positive if the operands have the same sign, negative otherwise
+                if signA == signB </span><span class="cov8" title="1">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov8" title="1">return NegativeInfinity</span>
+        }
+
+        // Handle zero dividend
+        <span class="cov8" title="1">if a.IsZero() </span><span class="cov8" title="1">{
+                // Get signs explicitly to handle negative zero
+                signA := a&amp;SignMask != 0
+                signB := b&amp;SignMask != 0
+                // The sign of the result is negative if the operands have different signs
+                if signA != signB </span><span class="cov8" title="1">{
+                        return NegativeZero
+                }</span>
+                <span class="cov8" title="1">return PositiveZero</span>
+        }
+
+        // Handle infinity cases
+        <span class="cov8" title="1">if a.IsInf() </span><span class="cov8" title="1">{
+                if b.IsInf() </span><span class="cov8" title="1">{
+                        return NaN // inf/inf is NaN
+                }</span>
+                // inf / x = inf with proper sign
+                <span class="cov8" title="1">signA := a&amp;SignMask != 0
+                signB := b&amp;SignMask != 0
+                if signA == signB </span><span class="cov8" title="1">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov8" title="1">return NegativeInfinity</span>
+        }
+
+        // x / inf = 0 with proper sign
+        <span class="cov8" title="1">if b.IsInf() </span><span class="cov8" title="1">{
+                signA := a&amp;SignMask != 0
+                signB := b&amp;SignMask != 0
+                if signA == signB </span><span class="cov8" title="1">{
+                        return PositiveZero
+                }</span>
+                <span class="cov8" title="1">return NegativeZero</span>
+        }
+
+        // Convert to float32, perform operation, convert back
+        <span class="cov8" title="1">f32a := a.ToFloat32()
+        f32b := b.ToFloat32()
+        result := f32a / f32b
+
+        // Handle potential overflow/underflow
+        if math.IsInf(float64(result), 0) </span><span class="cov0" title="0">{
+                if (a.Sign() &gt; 0) == (b.Sign() &gt; 0) </span><span class="cov0" title="0">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov0" title="0">return NegativeInfinity</span>
+        }
+
+        <span class="cov8" title="1">return ToFloat8(result)</span>
+}
+
+// Comparison operations
+
+// Equal returns true if two Float8 values are equal
+func Equal(a, b Float8) bool <span class="cov8" title="1">{
+        // Handle NaN cases - NaN is not equal to anything, including itself
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Handle zero cases - +0 == -0
+        <span class="cov8" title="1">if a.IsZero() &amp;&amp; b.IsZero() </span><span class="cov8" title="1">{
+                return true
+        }</span>
+
+        // Handle infinities
+        <span class="cov8" title="1">aInf := a.IsInf()
+        bInf := b.IsInf()
+        if aInf || bInf </span><span class="cov8" title="1">{
+                // If both are infinities, they must be the same value
+                if aInf &amp;&amp; bInf </span><span class="cov8" title="1">{
+                        // Both are infinity, check if they have the same sign
+                        return a == b
+                }</span>
+                // One is infinity, the other is not
+                <span class="cov8" title="1">return false</span>
+        }
+
+        // For all other cases, use exact equality
+        <span class="cov8" title="1">return a == b</span>
+}
+
+// Less returns true if a &lt; b
+func Less(a, b Float8) bool <span class="cov8" title="1">{
+        // Handle NaN cases - any comparison with NaN is false
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return false
+        }</span>
+
+        // Handle special cases
+        <span class="cov8" title="1">if a.IsZero() &amp;&amp; b.IsZero() </span><span class="cov8" title="1">{
+                return false // +0 == -0
+        }</span>
+
+        // Handle infinities
+        <span class="cov8" title="1">aInf := a.IsInf()
+        bInf := b.IsInf()
+        
+        if aInf &amp;&amp; bInf </span><span class="cov8" title="1">{
+                // Both are infinities, compare signs
+                // -Inf &lt; +Inf is true, +Inf &lt; -Inf is false, same infinities are equal
+                return a == NegativeInfinity &amp;&amp; b == PositiveInfinity
+        }</span> else<span class="cov8" title="1"> if aInf </span><span class="cov8" title="1">{
+                // a is infinity, check if it's -Inf
+                return a == NegativeInfinity
+        }</span> else<span class="cov8" title="1"> if bInf </span><span class="cov8" title="1">{
+                // b is infinity, check if it's +Inf
+                return b == PositiveInfinity
+        }</span>
+
+        // Regular comparison for finite numbers
+        <span class="cov8" title="1">return a.ToFloat32() &lt; b.ToFloat32()</span>
+}
+
+// Greater returns true if a &gt; b
+func Greater(a, b Float8) bool <span class="cov8" title="1">{
+        return Less(b, a)
+}</span>
+
+// LessEqual returns true if a &lt;= b
+func LessEqual(a, b Float8) bool <span class="cov8" title="1">{
+        return Less(a, b) || Equal(a, b)
+}</span>
+
+// GreaterEqual returns true if a &gt;= b
+func GreaterEqual(a, b Float8) bool <span class="cov8" title="1">{
+        return Greater(a, b) || Equal(a, b)
+}</span>
+
+// Min returns the smaller of two Float8 values.
+// If either value is NaN, returns NaN.
+// Min(+Inf, x) returns x (if x is finite or -Inf)
+// Min(-Inf, x) returns -Inf
+// Min(x, +Inf) returns x (if x is finite or -Inf)
+// Min(x, -Inf) returns -Inf
+func Min(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle NaN cases first
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return NaN
+        }</span>
+
+        // Handle infinities
+        <span class="cov8" title="1">switch </span>{
+        case a == NegativeInfinity || b == NegativeInfinity:<span class="cov8" title="1">
+                // If either is -Inf, that's the minimum
+                return NegativeInfinity</span>
+        case a == PositiveInfinity:<span class="cov8" title="1">
+                // If a is +Inf, return b (which could be finite or -Inf)
+                return b</span>
+        case b == PositiveInfinity:<span class="cov8" title="1">
+                // If b is +Inf, return a (which could be finite or -Inf)
+                return a</span>
+        default:<span class="cov8" title="1">
+                // For finite numbers, use Less to determine the minimum
+                if Less(a, b) </span><span class="cov8" title="1">{
+                        return a
+                }</span>
+                <span class="cov8" title="1">return b</span>
+        }
+}
+
+// Max returns the larger of two Float8 values.
+// If either value is NaN, returns NaN.
+// Max(+Inf, x) returns +Inf
+// Max(-Inf, x) returns x (if x is finite or +Inf)
+// Max(x, +Inf) returns +Inf
+// Max(x, -Inf) returns x (if x is finite or +Inf)
+func Max(a, b Float8) Float8 <span class="cov8" title="1">{
+        // Handle NaN cases first
+        if a.IsNaN() || b.IsNaN() </span><span class="cov8" title="1">{
+                return NaN
+        }</span>
+
+        // Handle infinities
+        <span class="cov8" title="1">switch </span>{
+        case a == PositiveInfinity || b == PositiveInfinity:<span class="cov8" title="1">
+                // If either is +Inf, that's the maximum
+                return PositiveInfinity</span>
+        case a == NegativeInfinity:<span class="cov8" title="1">
+                // If a is -Inf, return b (which could be finite or +Inf)
+                return b</span>
+        case b == NegativeInfinity:<span class="cov8" title="1">
+                // If b is -Inf, return a (which could be finite or +Inf)
+                return a</span>
+        default:<span class="cov8" title="1">
+                // For finite numbers, use Greater to determine the maximum
+                if Greater(a, b) </span><span class="cov8" title="1">{
+                        return a
+                }</span>
+                <span class="cov8" title="1">return b</span>
+        }
+}
+
+// Batch operations for slices
+
+// AddSlice performs element-wise addition of two Float8 slices.
+//
+// This function adds corresponding elements of the input slices and returns
+// a new slice with the results. The input slices must have the same length;
+// otherwise, the function will panic.
+//
+// Parameters:
+//   - a, b: Slices of Float8 values to be added element-wise.
+//
+// Returns:
+//   - A new slice where each element is the sum of the corresponding elements in a and b.
+//
+// Panics:
+//   - If the input slices have different lengths.
+//
+// Example:
+//
+//        a := []Float8{1.0, 2.0, 3.0}
+//        b := []Float8{4.0, 5.0, 6.0}
+//        result := AddSlice(a, b) // Returns [5.0, 7.0, 9.0]
+func AddSlice(a, b []Float8) []Float8 <span class="cov8" title="1">{
+        if len(a) != len(b) </span><span class="cov8" title="1">{
+                panic("float8: slice length mismatch")</span>
+        }
+
+        <span class="cov8" title="1">result := make([]Float8, len(a))
+        for i := range a </span><span class="cov8" title="1">{
+                result[i] = Add(a[i], b[i])
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// MulSlice performs element-wise multiplication of two Float8 slices.
+//
+// This function multiplies corresponding elements of the input slices and returns
+// a new slice with the results. The input slices must have the same length;
+// otherwise, the function will panic.
+//
+// Parameters:
+//   - a, b: Slices of Float8 values to be multiplied element-wise.
+//
+// Returns:
+//   - A new slice where each element is the product of the corresponding elements in a and b.
+//
+// Panics:
+//   - If the input slices have different lengths.
+//
+// Example:
+//
+//        a := []Float8{1.0, 2.0, 3.0}
+//        b := []Float8{4.0, 5.0, 6.0}
+//        result := MulSlice(a, b) // Returns [4.0, 10.0, 18.0]
+func MulSlice(a, b []Float8) []Float8 <span class="cov8" title="1">{
+        if len(a) != len(b) </span><span class="cov8" title="1">{
+                panic("float8: slice length mismatch")</span>
+        }
+
+        <span class="cov8" title="1">result := make([]Float8, len(a))
+        for i := range a </span><span class="cov8" title="1">{
+                result[i] = Mul(a[i], b[i])
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// ScaleSlice multiplies each element in the slice by a scalar
+func ScaleSlice(s []Float8, scalar Float8) []Float8 <span class="cov8" title="1">{
+        result := make([]Float8, len(s))
+        for i := range s </span><span class="cov8" title="1">{
+                result[i] = Mul(s[i], scalar)
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// SumSlice returns the sum of all elements in the slice.
+//
+// This function computes the sum of all Float8 values in the input slice.
+// If the slice is empty, it returns PositiveZero.
+//
+// The summation is performed using the standard addition rules for Float8,
+// including proper handling of special values (NaN, Inf, etc.).
+//
+// Parameters:
+//   - s: The input slice of Float8 values to sum.
+//
+// Returns:
+//   - The sum of all elements in the slice.
+//   - If the slice is empty, returns PositiveZero.
+//   - If any element is NaN, the result is NaN.
+//
+// Example:
+//
+//        s := []Float8{1.0, 2.0, 3.0, 4.0}
+//        sum := SumSlice(s) // Returns 10.0
+func SumSlice(s []Float8) Float8 <span class="cov8" title="1">{
+        var sum Float8 = PositiveZero
+        for _, v := range s </span><span class="cov8" title="1">{
+                sum = Add(sum, v)
+        }</span>
+        <span class="cov8" title="1">return sum</span>
+}
+
+// Lookup tables (loaded lazily)
+var (
+        addTable []Float8
+        subTable []Float8
+        mulTable []Float8
+        divTable []Float8
+)
+
+// EnableFastArithmetic enables lookup tables for arithmetic operations
+func EnableFastArithmetic() <span class="cov8" title="1">{
+        initArithmeticTables()
+}</span>
+
+// DisableFastArithmetic disables lookup tables and uses algorithmic operations
+func DisableFastArithmetic() <span class="cov8" title="1">{
+        addTable = nil
+        subTable = nil
+        mulTable = nil
+        divTable = nil
+}</span>
+
+// initArithmeticTables initializes all arithmetic lookup tables
+func initArithmeticTables() <span class="cov8" title="1">{
+        if addTable != nil </span><span class="cov8" title="1">{
+                return // Already initialized
+        }</span>
+
+        // Initialize tables with 65536 entries each (256 * 256)
+        <span class="cov8" title="1">addTable = make([]Float8, 65536)
+        subTable = make([]Float8, 65536)
+        mulTable = make([]Float8, 65536)
+        divTable = make([]Float8, 65536)
+
+        for a := 0; a &lt; 256; a++ </span><span class="cov8" title="1">{
+                for b := 0; b &lt; 256; b++ </span><span class="cov8" title="1">{
+                        idx := a&lt;&lt;8 | b
+                        f8a := Float8(a)
+                        f8b := Float8(b)
+
+                        addTable[idx] = addAlgorithmic(f8a, f8b)
+                        subTable[idx] = subAlgorithmic(f8a, f8b)
+                        mulTable[idx] = mulAlgorithmic(f8a, f8b)
+                        divTable[idx] = divAlgorithmic(f8a, f8b)
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package float8
+
+import (
+        "math"
+        "unsafe"
+)
+
+// Global conversion mode (can be changed for different behavior)
+var DefaultConversionMode = ModeDefault
+
+// ToFloat8 converts a float32 value to Float8 format using the default conversion mode.
+//
+// This is a convenience function that calls ToFloat8WithMode with DefaultConversionMode.
+// For more control over the conversion process, use ToFloat8WithMode directly.
+//
+// Special cases:
+//   - Converts +0.0 to PositiveZero (0x00)
+//   - Converts -0.0 to NegativeZero (0x80)
+//   - Converts +Inf to PositiveInfinity (0x78)
+//   - Converts -Inf to NegativeInfinity (0xF8)
+//   - Converts NaN to NaN (0x7F or 0xFF)
+//
+// For finite numbers, the conversion may lose precision or result in overflow/underflow.
+// The default mode handles these cases by saturating to the maximum/minimum representable values.
+func ToFloat8(f32 float32) Float8 <span class="cov8" title="1">{
+        result, _ := ToFloat8WithMode(f32, DefaultConversionMode)
+        return result
+}</span>
+
+// ToFloat8WithMode converts a float32 to Float8 with the specified conversion mode.
+//
+// The conversion mode determines how edge cases are handled:
+//   - ModeDefault: Uses standard IEEE 754 rounding behavior, saturating on overflow
+//   - ModeStrict: Returns an error for overflow/underflow/NaN
+//   - ModeFast: Uses lookup tables when available (if enabled)
+//
+// Special cases are handled as follows:
+//   - ±0.0 is converted to the corresponding Float8 zero (preserving sign)
+//   - ±Inf is converted to the corresponding Float8 infinity
+//   - NaN is handled according to the conversion mode
+//
+// For finite numbers, the conversion follows these steps:
+//   1. Extract sign, exponent, and mantissa from the float32
+//   2. Adjust the exponent for the Float8 format (E4M3FN)
+//   3. Round the mantissa to 3 bits (plus implicit leading bit)
+//   4. Handle overflow/underflow according to the conversion mode
+//
+// Returns the converted Float8 value and an error if the conversion fails in strict mode.
+func ToFloat8WithMode(f32 float32, mode ConversionMode) (Float8, error) <span class="cov8" title="1">{
+        // Handle special cases first
+        if f32 == 0.0 </span><span class="cov8" title="1">{
+                // Check the sign bit to distinguish between +0.0 and -0.0
+                if math.Signbit(float64(f32)) </span><span class="cov8" title="1">{
+                        return NegativeZero, nil  // -0.0
+                }</span>
+                <span class="cov8" title="1">return PositiveZero, nil</span>  // +0.0
+        }
+
+        <span class="cov8" title="1">if math.IsInf(float64(f32), 0) </span><span class="cov8" title="1">{
+                if f32 &gt; 0 </span><span class="cov8" title="1">{
+                        return PositiveInfinity, nil
+                }</span>
+                <span class="cov8" title="1">return NegativeInfinity, nil</span>
+        }
+
+        <span class="cov8" title="1">if math.IsNaN(float64(f32)) </span><span class="cov8" title="1">{
+                if mode == ModeStrict </span><span class="cov8" title="1">{
+                        return 0, ErrNaN
+                }</span>
+                // In non-strict mode, convert NaN to NaN (IEEE 754 E4M3FN standard)
+                <span class="cov8" title="1">return NaN, nil</span>
+        }
+
+        // Extract IEEE 754 components using bit manipulation for performance
+        <span class="cov8" title="1">bits := math.Float32bits(f32)
+        sign := bits &gt;&gt; 31
+        exp := int32((bits &gt;&gt; 23) &amp; 0xFF)
+        mant := bits &amp; 0x7FFFFF
+
+        // Handle zero after denormal check
+        if exp == 0 &amp;&amp; mant == 0 </span><span class="cov0" title="0">{
+                if sign != 0 </span><span class="cov0" title="0">{
+                        return NegativeZero, nil
+                }</span>
+                <span class="cov0" title="0">return PositiveZero, nil</span>
+        }
+
+        // Convert exponent from float32 bias to float8 bias
+        <span class="cov8" title="1">exp8 := exp - Float32Bias + ExponentBias
+
+        // Check for overflow
+        if exp8 &gt; ExponentMax </span><span class="cov8" title="1">{
+                if mode == ModeStrict </span><span class="cov8" title="1">{
+                        return 0, &amp;Float8Error{
+                                Op:    "convert",
+                                Value: f32,
+                                Msg:   "overflow: value too large for float8",
+                        }
+                }</span>
+                // Clamp to infinity
+                <span class="cov8" title="1">if sign != 0 </span><span class="cov8" title="1">{
+                        return NegativeInfinity, nil
+                }</span>
+                <span class="cov8" title="1">return PositiveInfinity, nil</span>
+        }
+
+        // Check for underflow
+        <span class="cov8" title="1">if exp8 &lt; ExponentMin </span><span class="cov8" title="1">{
+                if mode == ModeStrict </span><span class="cov8" title="1">{
+                        return 0, &amp;Float8Error{
+                                Op:    "convert",
+                                Value: f32,
+                                Msg:   "underflow: value too small for float8",
+                        }
+                }</span>
+                // Clamp to zero
+                <span class="cov8" title="1">if sign != 0 </span><span class="cov8" title="1">{
+                        return NegativeZero, nil
+                }</span>
+                <span class="cov8" title="1">return PositiveZero, nil</span>
+        }
+
+        // Extract top 3 bits of mantissa for float8
+        // Add rounding: if the 4th bit is set, round up
+        <span class="cov8" title="1">mant8 := mant &gt;&gt; (23 - MantissaLen)
+        if (mant&gt;&gt;(23-MantissaLen-1))&amp;1 != 0 </span><span class="cov8" title="1">{
+                mant8++
+                // Handle mantissa overflow
+                if mant8 &gt;= (1 &lt;&lt; MantissaLen) </span><span class="cov8" title="1">{
+                        mant8 = 0
+                        exp8++
+                        // Check for exponent overflow after rounding
+                        if exp8 &gt; ExponentMax </span><span class="cov8" title="1">{
+                                if mode == ModeStrict </span><span class="cov8" title="1">{
+                                        return 0, &amp;Float8Error{
+                                                Op:    "convert",
+                                                Value: f32,
+                                                Msg:   "overflow after rounding",
+                                        }
+                                }</span>
+                                <span class="cov8" title="1">if sign != 0 </span><span class="cov8" title="1">{
+                                        return NegativeInfinity, nil
+                                }</span>
+                                <span class="cov8" title="1">return PositiveInfinity, nil</span>
+                        }
+                }
+        }
+
+        // Combine components into Float8
+        <span class="cov8" title="1">result := Float8((sign &lt;&lt; 7) | (uint32(exp8) &lt;&lt; MantissaLen) | mant8)
+        return result, nil</span>
+}
+
+// ToFloat32 converts a Float8 value to float32.
+//
+// This conversion is always exact since Float8 is a subset of float32.
+// Special values are preserved:
+//   - PositiveZero/NegativeZero → ±0.0
+//   - PositiveInfinity/NegativeInfinity → ±Inf
+//   - NaN → NaN
+//
+// The conversion uses a fast path for common values and falls back to
+// algorithmic conversion for other values.
+func (f Float8) ToFloat32() float32 <span class="cov8" title="1">{
+        // Use lookup table for fast conversion if available
+        if conversionTable != nil </span><span class="cov8" title="1">{
+                return conversionTable[f]
+        }</span>
+        <span class="cov8" title="1">return f.toFloat32Algorithmic()</span>
+}
+
+// toFloat32Algorithmic performs algorithmic conversion (always available)
+func (f Float8) toFloat32Algorithmic() float32 <span class="cov8" title="1">{
+        // Handle special cases
+        if f.IsZero() </span><span class="cov8" title="1">{
+                if f == NegativeZero </span><span class="cov8" title="1">{
+                        return math.Float32frombits(0x80000000) // -0.0
+                }</span>
+                <span class="cov8" title="1">return 0.0</span>
+        }
+
+        <span class="cov8" title="1">if f.IsNaN() </span><span class="cov8" title="1">{
+                return float32(math.NaN())
+        }</span>
+        <span class="cov8" title="1">if f == PositiveInfinity </span><span class="cov8" title="1">{
+                return float32(math.Inf(1))
+        }</span>
+        <span class="cov8" title="1">if f == NegativeInfinity </span><span class="cov8" title="1">{
+                return float32(math.Inf(-1))
+        }</span>
+
+        // Extract components
+        <span class="cov8" title="1">sign := uint32(f) &gt;&gt; 7
+        exp8 := (uint32(f) &gt;&gt; MantissaLen) &amp; 0x0F
+        mant8 := uint32(f) &amp; MantissaMask
+
+        // Convert exponent from float8 bias to float32 bias
+        exp32 := exp8 - ExponentBias + Float32Bias
+
+        // Shift mantissa to float32 position
+        mant32 := mant8 &lt;&lt; (23 - MantissaLen)
+
+        // Combine into IEEE 754 float32
+        bits := (sign &lt;&lt; 31) | (exp32 &lt;&lt; 23) | mant32
+        return math.Float32frombits(bits)</span>
+}
+
+// Batch conversion functions for improved performance
+
+// ToSlice8 converts a slice of float32 to Float8 with optimized performance.
+//
+// This function is optimized for batch conversion of float32 values to Float8.
+// It handles special values correctly, including negative zero, infinity, and NaN.
+//
+// Parameters:
+//   - f32s: The input slice of float32 values to convert. May be nil or empty.
+//
+// Returns:
+//   - nil if the input slice is nil
+//   - A non-nil empty slice if the input slice is empty
+//   - A new slice containing the converted Float8 values
+//
+// Note: This function preserves negative zero by checking the sign bit of zero values.
+// For large slices, consider using a pool of []Float8 to reduce allocations.
+func ToSlice8(f32s []float32) []Float8 <span class="cov8" title="1">{
+        if f32s == nil </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+        <span class="cov8" title="1">if len(f32s) == 0 </span><span class="cov8" title="1">{
+                return []Float8{} // Return non-nil empty slice
+        }</span>
+
+        <span class="cov8" title="1">result := make([]Float8, len(f32s))
+
+        // Convert each element, preserving negative zero
+        for i := 0; i &lt; len(f32s); i++ </span><span class="cov8" title="1">{
+                // Special handling for negative zero
+                if f32s[i] == 0 &amp;&amp; math.Signbit(float64(f32s[i])) </span><span class="cov8" title="1">{
+                        result[i] = NegativeZero
+                }</span> else<span class="cov8" title="1"> {
+                        result[i] = ToFloat8(f32s[i])
+                }</span>
+        }
+
+        <span class="cov8" title="1">return result</span>
+}
+
+// ToSlice32 converts a slice of Float8 to float32 with optimized performance.
+//
+// This function is optimized for batch conversion of Float8 values to float32.
+// It handles all special values correctly, including negative zero, infinity, and NaN.
+//
+// Parameters:
+//   - f8s: The input slice of Float8 values to convert. May be nil or empty.
+//
+// Returns:
+//   - nil if the input slice is nil
+//   - A new slice containing the converted float32 values
+//
+// Note: The conversion from Float8 to float32 is always exact since Float8 is a
+// subset of float32. For large slices, consider using a pool of []float32 to reduce allocations.
+func ToSlice32(f8s []Float8) []float32 <span class="cov8" title="1">{
+        if len(f8s) == 0 </span><span class="cov8" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">result := make([]float32, len(f8s))
+
+        // Use unsafe pointer arithmetic for better performance
+        src := (*Float8)(unsafe.Pointer(&amp;f8s[0]))
+        dst := (*float32)(unsafe.Pointer(&amp;result[0]))
+
+        for i := 0; i &lt; len(f8s); i++ </span><span class="cov8" title="1">{
+                *(*float32)(unsafe.Pointer(uintptr(unsafe.Pointer(dst)) + uintptr(i)*unsafe.Sizeof(float32(0)))) =
+                        (*(*Float8)(unsafe.Pointer(uintptr(unsafe.Pointer(src)) + uintptr(i)*unsafe.Sizeof(Float8(0))))).ToFloat32()
+        }</span>
+
+        <span class="cov8" title="1">return result</span>
+}
+
+// Parse converts a string to Float8
+func Parse(s string) (Float8, error) <span class="cov8" title="1">{
+        // This would implement string parsing - simplified for now
+        // In a full implementation, this would parse various float formats
+        return PositiveZero, &amp;Float8Error{Op: "parse", Msg: "not implemented"}
+}</span>
+
+// Lookup table for fast conversion (loaded lazily)
+var conversionTable []float32
+
+// initConversionTable initializes the conversion lookup table
+func initConversionTable() <span class="cov8" title="1">{
+        if conversionTable != nil </span><span class="cov8" title="1">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">conversionTable = make([]float32, 256)
+        for i := 0; i &lt; 256; i++ </span><span class="cov8" title="1">{
+                conversionTable[i] = Float8(i).toFloat32Algorithmic()
+        }</span>
+}
+
+// EnableFastConversion enables lookup table for ToFloat32 conversion
+func EnableFastConversion() <span class="cov8" title="1">{
+        initConversionTable()
+}</span>
+
+// DisableFastConversion disables lookup table and uses algorithmic conversion
+func DisableFastConversion() <span class="cov8" title="1">{
+        conversionTable = nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package float8
+
+import (
+        "sync"
+)
+
+// Package initialization and configuration
+
+var (
+        initOnce sync.Once
+)
+
+// Initialize performs one-time package initialization
+func Initialize() <span class="cov8" title="1">{
+        initOnce.Do(func() </span>{<span class="cov8" title="1">
+                // Package is ready to use immediately
+                // Lookup tables are loaded lazily when needed
+        }</span>)
+}
+
+// Config holds package configuration options
+type Config struct {
+        EnableFastArithmetic bool
+        EnableFastConversion bool
+        DefaultMode          ConversionMode
+        ArithmeticMode       ArithmeticMode
+}
+
+// DefaultConfig returns the default package configuration
+func DefaultConfig() *Config <span class="cov8" title="1">{
+        return &amp;Config{
+                EnableFastArithmetic: false, // Disabled by default to save memory
+                EnableFastConversion: false, // Disabled by default to save memory
+                DefaultMode:          ModeDefault,
+                ArithmeticMode:       ArithmeticAuto,
+        }
+}</span>
+
+// Configure applies the given configuration to the package
+func Configure(config *Config) <span class="cov8" title="1">{
+        if config.EnableFastArithmetic </span><span class="cov8" title="1">{
+                EnableFastArithmetic()
+        }</span> else<span class="cov8" title="1"> {
+                DisableFastArithmetic()
+        }</span>
+
+        <span class="cov8" title="1">if config.EnableFastConversion </span><span class="cov8" title="1">{
+                EnableFastConversion()
+        }</span> else<span class="cov8" title="1"> {
+                DisableFastConversion()
+        }</span>
+
+        <span class="cov8" title="1">DefaultConversionMode = config.DefaultMode
+        DefaultArithmeticMode = config.ArithmeticMode</span>
+}
+
+// GetMemoryUsage returns the current memory usage of lookup tables in bytes
+func GetMemoryUsage() int <span class="cov8" title="1">{
+        var usage int
+
+        if conversionTable != nil </span><span class="cov8" title="1">{
+                usage += 256 * 4 // 256 float32 values
+        }</span>
+
+        <span class="cov8" title="1">if addTable != nil </span><span class="cov8" title="1">{
+                usage += 65536 // 65536 uint8 values
+        }</span>
+        <span class="cov8" title="1">if subTable != nil </span><span class="cov8" title="1">{
+                usage += 65536
+        }</span>
+        <span class="cov8" title="1">if mulTable != nil </span><span class="cov8" title="1">{
+                usage += 65536
+        }</span>
+        <span class="cov8" title="1">if divTable != nil </span><span class="cov8" title="1">{
+                usage += 65536
+        }</span>
+
+        <span class="cov8" title="1">return usage</span>
+}
+
+// Version information
+const (
+        Version      = "2.0.0"
+        VersionMajor = 2
+        VersionMinor = 0
+        VersionPatch = 0
+)
+
+// GetVersion returns the package version string
+func GetVersion() string <span class="cov8" title="1">{
+        return Version
+}</span>
+
+// Convenience functions for common operations
+
+// Zero returns a Float8 zero value
+func Zero() Float8 <span class="cov8" title="1">{
+        return PositiveZero
+}</span>
+
+// One returns a Float8 value representing 1.0
+func One() Float8 <span class="cov8" title="1">{
+        return ToFloat8(1.0)
+}</span>
+
+// FromInt converts an integer to Float8
+func FromInt(i int) Float8 <span class="cov8" title="1">{
+        return ToFloat8(float32(i))
+}</span>
+
+// FromFloat64 converts a float64 to Float8 (with potential precision loss)
+func FromFloat64(f float64) Float8 <span class="cov8" title="1">{
+        return ToFloat8(float32(f))
+}</span>
+
+// ToFloat64 converts a Float8 to float64
+func (f Float8) ToFloat64() float64 <span class="cov8" title="1">{
+        return float64(f.ToFloat32())
+}</span>
+
+// ToInt converts a Float8 to int (truncated)
+func (f Float8) ToInt() int <span class="cov8" title="1">{
+        return int(f.ToFloat32())
+}</span>
+
+// Validation functions
+
+// IsValid returns true if the Float8 represents a valid number
+func (f Float8) IsValid() bool <span class="cov8" title="1">{
+        // All bit patterns are valid in Float8
+        return true
+}</span>
+
+// IsNormal returns true if the Float8 is a normal (non-zero, non-infinite) number
+func (f Float8) IsNormal() bool <span class="cov8" title="1">{
+        return !f.IsZero() &amp;&amp; f.IsFinite()
+}</span>
+
+// Package information for debugging
+
+// DebugInfo returns debugging information about the package state
+func DebugInfo() map[string]interface{} <span class="cov8" title="1">{
+        return map[string]interface{}{
+                "version":            Version,
+                "memory_usage_bytes": GetMemoryUsage(),
+                "fast_arithmetic":    addTable != nil,
+                "fast_conversion":    conversionTable != nil,
+                "default_conv_mode":  DefaultConversionMode,
+                "default_arith_mode": DefaultArithmeticMode,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package float8
+
+import (
+        "math"
+)
+
+// Mathematical functions for Float8
+
+// Sqrt returns the square root of the Float8 value.
+//
+// Special cases are:
+//
+//        Sqrt(+0) = +0
+//        Sqrt(-0) = -0
+//        Sqrt(+Inf) = +Inf
+//        Sqrt(x) = NaN if x &lt; 0 (including -Inf)
+//        Sqrt(NaN) = NaN
+//
+// For finite x ≥ 0, the result is the greatest Float8 value y such that y² ≤ x.
+// The result is rounded to the nearest representable Float8 value.
+func Sqrt(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return PositiveZero
+        }</span>
+        <span class="cov8" title="1">if f == PositiveInfinity </span><span class="cov8" title="1">{
+                return PositiveInfinity
+        }</span>
+        <span class="cov8" title="1">if f.Sign() &lt; 0 </span><span class="cov8" title="1">{
+                // Square root of negative number - return zero (NaN equivalent)
+                return PositiveZero
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Sqrt(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Pow returns f raised to the power of exp.
+//
+// Special cases are:
+//
+//        Pow(±0, exp) = ±0 for exp &gt; 0
+//        Pow(±0, exp) = +Inf for exp &lt; 0
+//        Pow(1, exp) = 1 for any exp (even NaN)
+//        Pow(f, 0) = 1 for any f (including NaN, +Inf, -Inf)
+//        Pow(f, 1) = f for any f
+//        Pow(NaN, exp) = NaN
+//        Pow(f, NaN) = NaN
+//        Pow(±0, -Inf) = +Inf
+//        Pow(±0, +Inf) = +0
+//        Pow(+Inf, exp) = +Inf for exp &gt; 0
+//        Pow(+Inf, exp) = +0 for exp &lt; 0
+//        Pow(-Inf, exp) = -0 for exp a negative odd integer
+//        Pow(-Inf, exp) = +0 for exp a negative non-odd integer
+//        Pow(-Inf, exp) = -Inf for exp a positive odd integer
+//        Pow(-Inf, exp) = +Inf for exp a positive non-odd integer
+//        Pow(-1, ±Inf) = 1
+//        Pow(f, +Inf) = +Inf for |f| &gt; 1
+//        Pow(f, -Inf) = +0 for |f| &gt; 1
+//        Pow(f, +Inf) = +0 for |f| &lt; 1
+//        Pow(f, -Inf) = +Inf for |f| &lt; 1
+//
+// The result is rounded to the nearest representable Float8 value.
+func Pow(f, exp Float8) Float8 <span class="cov8" title="1">{
+        // Handle special cases
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                if exp.Sign() &gt; 0 </span><span class="cov8" title="1">{
+                        return PositiveZero
+                }</span>
+                <span class="cov8" title="1">if exp.Sign() &lt; 0 </span><span class="cov8" title="1">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov8" title="1">return ToFloat8(1.0)</span> // 0^0 = 1
+        }
+
+        <span class="cov8" title="1">if f == PositiveInfinity </span><span class="cov8" title="1">{
+                if exp.Sign() &gt; 0 </span><span class="cov8" title="1">{
+                        return PositiveInfinity
+                }</span>
+                <span class="cov8" title="1">if exp.Sign() &lt; 0 </span><span class="cov8" title="1">{
+                        return PositiveZero
+                }</span>
+                <span class="cov8" title="1">return ToFloat8(1.0)</span> // inf^0 = 1
+        }
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        exp32 := exp.ToFloat32()
+        result := float32(math.Pow(float64(f32), float64(exp32)))
+        return ToFloat8(result)</span>
+}
+
+// Exp returns e^f
+func Exp(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return ToFloat8(1.0)
+        }</span>
+        <span class="cov8" title="1">if f == PositiveInfinity </span><span class="cov8" title="1">{
+                return PositiveInfinity
+        }</span>
+        <span class="cov8" title="1">if f == NegativeInfinity </span><span class="cov8" title="1">{
+                return PositiveZero
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Exp(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Log returns the natural logarithm of f.
+//
+// Special cases are:
+//
+//        Log(+Inf) = +Inf
+//        Log(0) = -Inf
+//        Log(x &lt; 0) = NaN
+//        Log(NaN) = NaN
+//
+// For finite x &gt; 0, the result is the natural logarithm of x.
+// The result is rounded to the nearest representable Float8 value.
+func Log(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return NegativeInfinity
+        }</span>
+        <span class="cov8" title="1">if f == PositiveInfinity </span><span class="cov8" title="1">{
+                return PositiveInfinity
+        }</span>
+        <span class="cov8" title="1">if f.Sign() &lt; 0 </span><span class="cov8" title="1">{
+                // Log of negative number - return zero (NaN equivalent)
+                return PositiveZero
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Log(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Sin returns the sine of f (in radians).
+//
+// Special cases are:
+//
+//        Sin(±0) = ±0
+//        Sin(±Inf) = NaN
+//        Sin(NaN) = NaN
+//
+// For finite x, the result is the sine of x in the range [-1, 1].
+// The result is rounded to the nearest representable Float8 value.
+func Sin(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return f // Preserve sign of zero
+        }</span>
+        <span class="cov8" title="1">if f.IsInf() </span><span class="cov8" title="1">{
+                return PositiveZero // sin(inf) is undefined, return 0
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Sin(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Cos returns the cosine of f (in radians).
+//
+// Special cases are:
+//
+//        Cos(±0) = 1
+//        Cos(±Inf) = NaN
+//        Cos(NaN) = NaN
+//
+// For finite x, the result is the cosine of x in the range [-1, 1].
+// The result is rounded to the nearest representable Float8 value.
+func Cos(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return ToFloat8(1.0)
+        }</span>
+        <span class="cov8" title="1">if f.IsInf() </span><span class="cov8" title="1">{
+                return PositiveZero // cos(inf) is undefined, return 0
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Cos(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Tan returns the tangent of f (in radians).
+//
+// Special cases are:
+//
+//        Tan(±0) = ±0
+//        Tan(±Inf) = NaN
+//        Tan(NaN) = NaN
+//
+// For finite x, the result is the tangent of x.
+// The result is rounded to the nearest representable Float8 value.
+// Note that the result may be extremely large or small for inputs near (2n+1)π/2.
+func Tan(f Float8) Float8 <span class="cov8" title="1">{
+        if f == PositiveZero || f == NegativeZero </span><span class="cov8" title="1">{
+                return f // Preserve sign of zero
+        }</span>
+        <span class="cov8" title="1">if f.IsInf() </span><span class="cov8" title="1">{
+                return PositiveZero // tan(inf) is undefined, return 0
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Tan(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Floor returns the greatest integer value less than or equal to f.
+//
+// Special cases are:
+//
+//        Floor(±0) = ±0
+//        Floor(±Inf) = ±Inf
+//        Floor(NaN) = NaN
+//
+// For finite x, the result is the greatest integer value ≤ x.
+// The result is exact (no rounding occurs).
+func Floor(f Float8) Float8 <span class="cov8" title="1">{
+        if f.IsZero() || f.IsInf() </span><span class="cov8" title="1">{
+                return f
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Floor(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Ceil returns the least integer value greater than or equal to f.
+//
+// Special cases are:
+//
+//        Ceil(±0) = ±0
+//        Ceil(±Inf) = ±Inf
+//        Ceil(NaN) = NaN
+//
+// For finite x, the result is the least integer value ≥ x.
+// The result is exact (no rounding occurs).
+func Ceil(f Float8) Float8 <span class="cov8" title="1">{
+        if f.IsZero() || f.IsInf() </span><span class="cov8" title="1">{
+                return f
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Ceil(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Round returns the nearest integer value to f, rounding ties to even.
+//
+// Special cases are:
+//
+//        Round(±0) = ±0
+//        Round(±Inf) = ±Inf
+//        Round(NaN) = NaN
+//
+// For finite x, the result is the nearest integer to x.
+// Ties are rounded to the nearest even integer.
+// The result is exact (no rounding occurs).
+func Round(f Float8) Float8 <span class="cov8" title="1">{
+        if f.IsZero() || f.IsInf() </span><span class="cov8" title="1">{
+                return f
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Round(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Trunc returns the integer value of f with any fractional part removed.
+//
+// Special cases are:
+//
+//        Trunc(±0) = ±0
+//        Trunc(±Inf) = ±Inf
+//        Trunc(NaN) = NaN
+//
+// For finite x, the result is the integer part of x with the sign of x.
+// This is equivalent to rounding toward zero.
+// The result is exact (no rounding occurs).
+func Trunc(f Float8) Float8 <span class="cov8" title="1">{
+        if f.IsZero() || f.IsInf() </span><span class="cov8" title="1">{
+                return f
+        }</span>
+
+        <span class="cov8" title="1">f32 := f.ToFloat32()
+        result := float32(math.Trunc(float64(f32)))
+        return ToFloat8(result)</span>
+}
+
+// Fmod returns the floating-point remainder of x/y.
+//
+// The result has the same sign as x and magnitude less than the magnitude of y.
+//
+// Special cases are:
+//
+//        Fmod(±0, y) = ±0 for y != 0
+//        Fmod(±Inf, y) = NaN
+//        Fmod(x, 0) = NaN
+//        Fmod(NaN, y) = NaN
+//        Fmod(x, NaN) = NaN
+//        Fmod(x, ±Inf) = x for x not infinite
+//
+// For finite x and y (y ≠ 0), the result is x - n*y where n is the integer
+// nearest to x/y. If two integers are equally near, the even one is chosen.
+// The result is rounded to the nearest representable Float8 value.
+func Fmod(x, y Float8) Float8 <span class="cov8" title="1">{
+        if y.IsZero() </span><span class="cov8" title="1">{
+                // fmod(x, ±0) is undefined, but we return 0 for compatibility
+                return PositiveZero
+        }</span>
+        <span class="cov8" title="1">if x.IsZero() </span><span class="cov8" title="1">{
+                // fmod(±0, y) = ±0
+                return x
+        }</span>
+        <span class="cov8" title="1">if y.IsInf() </span><span class="cov8" title="1">{
+                // fmod(x, ±Inf) = x for finite x
+                return x
+        }</span>
+        <span class="cov8" title="1">if x.IsInf() </span><span class="cov8" title="1">{
+                // fmod(±Inf, y) = NaN, but we return 0 for compatibility
+                return PositiveZero
+        }</span>
+
+        <span class="cov8" title="1">f32 := x.ToFloat32()
+        div32 := y.ToFloat32()
+        result := float32(math.Mod(float64(f32), float64(div32)))
+        return ToFloat8(result)</span>
+}
+
+// Constants as Float8 values
+var (
+        E      = ToFloat8(2.718281828459045)  // Euler's number
+        Pi     = ToFloat8(3.141592653589793)  // Pi
+        Phi    = ToFloat8(1.618033988749895)  // Golden ratio
+        Sqrt2  = ToFloat8(1.4142135623730951) // Square root of 2
+        SqrtE  = ToFloat8(1.6487212707001282) // Square root of E
+        SqrtPi = ToFloat8(1.7724538509055159) // Square root of Pi
+        Ln2    = ToFloat8(0.6931471805599453) // Natural logarithm of 2
+        Log2E  = ToFloat8(1.4426950408889634) // Base-2 logarithm of E
+        Ln10   = ToFloat8(2.302585092994046)  // Natural logarithm of 10
+        Log10E = ToFloat8(0.4342944819032518) // Base-10 logarithm of E
+)
+
+// Utility functions
+
+// Clamp restricts f to the range [min, max]
+func Clamp(f, min, max Float8) Float8 <span class="cov8" title="1">{
+        if Less(f, min) </span><span class="cov8" title="1">{
+                return min
+        }</span>
+        <span class="cov8" title="1">if Greater(f, max) </span><span class="cov8" title="1">{
+                return max
+        }</span>
+        <span class="cov8" title="1">return f</span>
+}
+
+// Lerp performs linear interpolation between a and b by factor t
+func Lerp(a, b, t Float8) Float8 <span class="cov8" title="1">{
+        // lerp(a, b, t) = a + t * (b - a)
+        diff := Sub(b, a)
+        scaled := Mul(t, diff)
+        return Add(a, scaled)
+}</span>
+
+// Sign returns -1, 0, or 1 depending on the sign of f
+func Sign(f Float8) Float8 <span class="cov8" title="1">{
+        sign := f.Sign()
+        switch sign </span>{
+        case -1:<span class="cov8" title="1">
+                return ToFloat8(-1.0)</span>
+        case 0:<span class="cov8" title="1">
+                return PositiveZero</span>
+        case 1:<span class="cov8" title="1">
+                return ToFloat8(1.0)</span>
+        default:<span class="cov0" title="0">
+                return PositiveZero</span>
+        }
+}
+
+// CopySign returns a Float8 with the magnitude of f and the sign of sign
+func CopySign(f, sign Float8) Float8 <span class="cov8" title="1">{
+        if sign.Sign() &lt; 0 </span><span class="cov8" title="1">{
+                return f.Abs() | SignMask // Set sign bit
+        }</span>
+        <span class="cov8" title="1">return f.Abs()</span> // Clear sign bit
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package float8
+
+import (
+        "fmt"
+)
+
+// Float8 represents an 8-bit floating-point number using the IEEE 754 FP8 E4M3FN format.
+// This format is commonly used in machine learning for reduced-precision arithmetic.
+//
+// Bit layout:
+//   - 1 bit  : Sign (0 = positive, 1 = negative)
+//   - 4 bits : Exponent (biased by 7, range [-6, 7])
+//   - 3 bits : Mantissa (3 explicit bits, 1 implicit leading bit for normal numbers)
+//
+// Special values:
+//   - PositiveZero/NegativeZero: Exponent=0000, Mantissa=000
+//   - PositiveInfinity/NegativeInfinity: Exponent=1111, Mantissa=000
+//   - NaN: Exponent=1111, Mantissa=111
+//
+// This implementation follows the E4M3FN variant which has no infinities and two NaNs.
+type Float8 uint8
+
+// Bit masks and constants for Float8 format
+const (
+        SignMask     = 0b10000000 // 0x80 - Sign bit mask
+        ExponentMask = 0b01111000 // 0x78 - Exponent bits mask
+        MantissaMask = 0b00000111 // 0x07 - Mantissa bits mask
+        MantissaLen  = 3          // Number of mantissa bits
+
+        // Exponent bias and limits
+        // See https://en.wikipedia.org/wiki/Exponent_bias
+        // bias = 2^(|exponent|-1) - 1
+        ExponentBias = 7  // Bias for 4-bit exponent
+        ExponentMax  = 15 // Maximum exponent value
+        ExponentMin  = -7 // Minimum exponent value
+
+        // Float32 constants for conversion
+        Float32Bias = 127 // IEEE 754 single precision bias
+
+        // Special values
+        PositiveZero     Float8 = 0x00
+        NegativeZero     Float8 = 0x80
+        PositiveInfinity Float8 = 0x78 // IEEE 754 E4M3FN: S.1111.000 = 0.1111.000₂
+        NegativeInfinity Float8 = 0xF8 // IEEE 754 E4M3FN: S.1111.000 = 1.1111.000₂
+        NaN              Float8 = 0x7F // IEEE 754 E4M3FN: S.1111.111 (0x7F or 0xFF)
+        MaxValue         Float8 = 0x7E // Largest finite positive value
+        MinValue         Float8 = 0xFE // Largest finite negative value
+        SmallestPositive Float8 = 0x01 // Smallest positive normalized value
+)
+
+// ConversionMode defines how conversions handle edge cases
+type ConversionMode int
+
+const (
+        // ModeDefault uses standard IEEE 754 rounding behavior
+        ModeDefault ConversionMode = iota
+        // ModeStrict returns errors for overflow/underflow
+        ModeStrict
+        // ModeFast uses lookup tables when available (default for arithmetic)
+        ModeFast
+)
+
+// ArithmeticMode defines which implementation to use for arithmetic operations
+type ArithmeticMode int
+
+const (
+        // ArithmeticAuto chooses the best implementation automatically
+        ArithmeticAuto ArithmeticMode = iota
+        // ArithmeticAlgorithmic forces algorithmic implementation
+        ArithmeticAlgorithmic
+        // ArithmeticLookup forces lookup table implementation (if available)
+        ArithmeticLookup
+)
+
+// Float8Error represents errors that can occur during Float8 operations
+type Float8Error struct {
+        Op    string  // Operation that caused the error
+        Value float32 // Input value that caused the error (if applicable)
+        Msg   string  // Error message
+}
+
+func (e *Float8Error) Error() string <span class="cov8" title="1">{
+        if e.Value != 0 </span><span class="cov8" title="1">{
+                return fmt.Sprintf("float8.%s: %s (value: %g)", e.Op, e.Msg, e.Value)
+        }</span>
+        <span class="cov8" title="1">return fmt.Sprintf("float8.%s: %s", e.Op, e.Msg)</span>
+}
+
+// Common error instances
+var (
+        ErrOverflow  = &amp;Float8Error{Op: "convert", Msg: "value too large for float8"}
+        ErrUnderflow = &amp;Float8Error{Op: "convert", Msg: "value too small for float8"}
+        ErrNaN       = &amp;Float8Error{Op: "convert", Msg: "NaN not representable in float8"}
+)
+
+// IsZero reports whether f represents the floating-point value zero (either positive or negative).
+//
+// According to IEEE 754, both +0 and -0 are considered zero, though they may have different
+// bit patterns and behave differently in certain operations (like 1/+0 = +Inf, 1/-0 = -Inf).
+//
+// Returns:
+//   - true if f is +0 or -0
+//   - false otherwise, including for NaN and infinity values
+func (f Float8) IsZero() bool <span class="cov8" title="1">{
+        return f == PositiveZero || f == NegativeZero
+}</span>
+
+// IsInf reports whether f is an infinity, either positive or negative.
+//
+// In the E4M3FN format, infinity values have all exponent bits set (0x78 for +Inf, 0xF8 for -Inf)
+// and a zero mantissa. This is different from the standard IEEE 754 format used in float32/float64.
+//
+// Returns:
+//   - true if f is positive or negative infinity
+//   - false otherwise, including for NaN and finite values
+func (f Float8) IsInf() bool <span class="cov8" title="1">{
+        return f == PositiveInfinity || f == NegativeInfinity
+}</span>
+
+// IsFinite reports whether f is a finite value (not infinite and not NaN).
+//
+// A Float8 value is finite if its exponent is not all 1s (0x0F). This includes
+// both normal numbers (with an implicit leading 1 bit) and subnormal numbers
+// (with an implicit leading 0 bit).
+//
+// Returns:
+//   - true if f is a finite number (including zero and subnormals)
+//   - false if f is infinity or NaN
+func (f Float8) IsFinite() bool <span class="cov8" title="1">{
+        // Extract exponent bits (bits 3-6)
+        exp := (f &amp; ExponentMask) &gt;&gt; MantissaLen
+        return exp &lt; 0x0F // Finite if exponent is not all 1s (0x0F = 1111)
+}</span>
+
+// IsNaN reports whether f is a "not-a-number" (NaN) value.
+//
+// In the E4M3FN format, NaN is represented with all exponent bits set (0x0F)
+// and all mantissa bits set (0x07). This results in two possible NaN values:
+// 0x7F (positive NaN) and 0xFF (negative NaN).
+//
+// Returns:
+//   - true if f is a NaN value
+//   - false otherwise, including for infinity and finite values
+func (f Float8) IsNaN() bool <span class="cov8" title="1">{
+        // IEEE 754 E4M3FN: NaN has exponent=1111 and mantissa=111 (non-zero)
+        // This corresponds to bit patterns 0x7F (positive) and 0xFF (negative)
+        return (f&amp;0x7F == 0x7F) &amp;&amp; (f&amp;0x07 == 0x07)
+}</span>
+
+// Sign returns the sign of the Float8 value.
+//
+// The return values are:
+//   - 1  if f &gt; 0
+//   - -1 if f &lt; 0
+//   - 0  if f is zero (including -0) or NaN
+//
+// Note that negative zero is treated as zero (returns 0), following the IEEE 754
+// standard where +0 and -0 compare as equal. However, they can be distinguished
+// using bitwise operations or by examining the sign bit directly.
+//
+// For NaN values, Sign returns 0, consistent with math/big.Float's behavior.
+func (f Float8) Sign() int <span class="cov8" title="1">{
+        if f.IsNaN() </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">if f.IsZero() </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">if f&amp;SignMask != 0 </span><span class="cov8" title="1">{
+                return -1
+        }</span>
+        <span class="cov8" title="1">return 1</span>
+}
+
+// Abs returns the absolute value of f.
+//
+// Special cases are:
+//
+//        Abs(±Inf) = +Inf
+//        Abs(NaN) = NaN
+//        Abs(±0) = +0
+//
+// For all other values, Abs clears the sign bit to return a positive number.
+func (f Float8) Abs() Float8 <span class="cov8" title="1">{
+        return f &amp;^ SignMask // Clear sign bit
+}</span>
+
+// Neg returns the negation of the Float8
+func (f Float8) Neg() Float8 <span class="cov8" title="1">{
+        if f.IsZero() </span><span class="cov8" title="1">{
+                return f // Preserve zero sign for IEEE compliance
+        }</span>
+        <span class="cov8" title="1">return f ^ SignMask</span> // Flip sign bit
+}
+
+// String returns a string representation of the Float8 value
+func (f Float8) String() string <span class="cov8" title="1">{
+        return fmt.Sprintf("%.6g", f.ToFloat32())
+}</span>
+
+// GoString returns a Go syntax representation of the Float8 value
+func (f Float8) GoString() string <span class="cov8" title="1">{
+        return fmt.Sprintf("float8.FromBits(0x%02x)", uint8(f))
+}</span>
+
+// Bits returns the underlying uint8 representation
+func (f Float8) Bits() uint8 <span class="cov8" title="1">{
+        return uint8(f)
+}</span>
+
+// FromBits creates a Float8 from its bit representation
+func FromBits(bits uint8) Float8 <span class="cov8" title="1">{
+        return Float8(bits)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
