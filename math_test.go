@@ -160,19 +160,19 @@ func TestMathFunctions(t *testing.T) {
 				f := ToFloat8(float32(angle.rad))
 				expected := math.Sin(angle.rad)
 				result := Sin(f).ToFloat64()
-				
+
 				// Special handling for 2π where we expect the result to be close to 0
 				if angle.name == "2π" {
 					tolerance := 0.25
 					if math.Abs(result) > tolerance {
-						t.Errorf("Sin(%v) = %v, want close to 0 (tolerance: %v, diff: %v)", 
+						t.Errorf("Sin(%v) = %v, want close to 0 (tolerance: %v, diff: %v)",
 							angle.rad, result, tolerance, math.Abs(result))
 					}
 				} else {
 					// Increased tolerance for 8-bit float precision for other angles
 					tolerance := math.Max(0.15, math.Abs(expected*0.25)) // 25% tolerance or 0.15, whichever is larger
 					if math.Abs(result-expected) > tolerance {
-						t.Errorf("Sin(%v) = %v, want %v (tolerance: %v, diff: %v)", 
+						t.Errorf("Sin(%v) = %v, want %v (tolerance: %v, diff: %v)",
 							angle.rad, result, expected, tolerance, math.Abs(result-expected))
 					}
 				}
@@ -185,7 +185,7 @@ func TestMathFunctions(t *testing.T) {
 				// Increased tolerance for 8-bit float precision
 				tolerance := math.Max(0.15, math.Abs(expected*0.25)) // 25% tolerance or 0.15, whichever is larger
 				if math.Abs(result-expected) > tolerance {
-					t.Errorf("Cos(%v) = %v, want %v (tolerance: %v, diff: %v)", 
+					t.Errorf("Cos(%v) = %v, want %v (tolerance: %v, diff: %v)",
 						angle.rad, result, expected, tolerance, math.Abs(result-expected))
 				}
 			})
@@ -196,19 +196,19 @@ func TestMathFunctions(t *testing.T) {
 					f := ToFloat8(float32(angle.rad))
 					expected := math.Tan(angle.rad)
 					result := Tan(f).ToFloat64()
-					
+
 					// Special handling for 2π where we expect the result to be close to 0
 					if angle.name == "2π" {
 						tolerance := 0.25
 						if math.Abs(result) > tolerance {
-							t.Errorf("Tan(%v) = %v, want close to 0 (tolerance: %v, diff: %v)", 
+							t.Errorf("Tan(%v) = %v, want close to 0 (tolerance: %v, diff: %v)",
 								angle.rad, result, tolerance, math.Abs(result))
 						}
 					} else {
 						// Increased tolerance for 8-bit float precision for other angles
 						tolerance := math.Max(0.15, math.Abs(expected*0.25)) // 25% tolerance or 0.15, whichever is larger
 						if math.Abs(result-expected) > tolerance {
-							t.Errorf("Tan(%v) = %v, want %v (tolerance: %v, diff: %v)", 
+							t.Errorf("Tan(%v) = %v, want %v (tolerance: %v, diff: %v)",
 								angle.rad, result, expected, tolerance, math.Abs(result-expected))
 						}
 					}
@@ -219,12 +219,12 @@ func TestMathFunctions(t *testing.T) {
 
 	t.Run("Rounding", func(t *testing.T) {
 		tests := []struct {
-			name     string
-			input    float64
-			floor    float64
-			ceil     float64
-			round    float64
-			trunc    float64
+			name  string
+			input float64
+			floor float64
+			ceil  float64
+			round float64
+			trunc float64
 		}{
 			{"Positive decimal", 3.7, 3.0, 4.0, 4.0, 3.0},
 			{"Negative decimal", -2.3, -3.0, -2.0, -2.0, -2.0},

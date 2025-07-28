@@ -22,7 +22,7 @@ func TestToFloat8Basic(t *testing.T) {
 		name     string
 	}{
 		{0.0, PositiveZero, "positive zero"},
-		{float32(math.Copysign(0.0, -1.0)), 0x80, "negative zero"},  // 0x80 is the correct representation for -0.0
+		{float32(math.Copysign(0.0, -1.0)), 0x80, "negative zero"}, // 0x80 is the correct representation for -0.0
 		{1.0, 0x38, "one"},
 		{-1.0, 0xB8, "negative one"},
 		{2.0, 0x40, "two"},
@@ -85,10 +85,10 @@ func TestToFloat32(t *testing.T) {
 		{0x48, 4.0, "four"},
 		{0x28, 0.25, "quarter"},
 		{0x20, 0.125, "one eighth"},
-		{0x10, 0.03125, "denormalized small positive"}, // Smallest positive denormalized number
-		{0x90, -0.03125, "denormalized small negative"}, // Smallest negative denormalized number
-		{0x7E, 448.0, "max normal positive"},       // Maximum normal positive number (0x7E = 126 -> 2^6 * 1.75 = 64 * 7.0 = 448)
-		{0xFE, -448.0, "max normal negative"},      // Maximum normal negative number
+		{0x10, 0.03125, "denormalized small positive"},     // Smallest positive denormalized number
+		{0x90, -0.03125, "denormalized small negative"},    // Smallest negative denormalized number
+		{0x7E, 448.0, "max normal positive"},               // Maximum normal positive number (0x7E = 126 -> 2^6 * 1.75 = 64 * 7.0 = 448)
+		{0xFE, -448.0, "max normal negative"},              // Maximum normal negative number
 		{0x78, float32(math.Inf(1)), "positive infinity"},  // Positive infinity (IEEE 754 E4M3FN)
 		{0xF8, float32(math.Inf(-1)), "negative infinity"}, // Negative infinity (IEEE 754 E4M3FN)
 		{0x7F, float32(math.NaN()), "NaN"},                 // NaN (IEEE 754 E4M3FN)
@@ -191,15 +191,15 @@ func TestRoundTripConversion(t *testing.T) {
 func TestAddBasic(t *testing.T) {
 	// Save the current configuration to restore it later
 	origConfig := DefaultConfig()
-	
+
 	// Restore the original configuration after the test
 	defer Configure(origConfig)
 
 	tests := []struct {
-		a, b       Float8
-		expected   Float8
-		name       string
-		imprecise  bool // true if the result might be imprecise due to floating-point limitations
+		a, b      Float8
+		expected  Float8
+		name      string
+		imprecise bool // true if the result might be imprecise due to floating-point limitations
 	}{
 		{PositiveZero, PositiveZero, PositiveZero, "zero + zero", false},
 		{ToFloat8(1.0), PositiveZero, ToFloat8(1.0), "one + zero", false},
@@ -236,7 +236,7 @@ func TestAddBasic(t *testing.T) {
 				t.Run(test.name, func(t *testing.T) {
 					// Test AddWithMode with the current mode
 					result := AddWithMode(test.a, test.b, mode.name)
-					
+
 					// For imprecise operations, allow a small tolerance
 					if test.imprecise {
 						tolerance := ToFloat8(0.01)
@@ -251,21 +251,21 @@ func TestAddBasic(t *testing.T) {
 							t.Logf("result float: %v, expected float: %v", result.ToFloat32(), test.expected.ToFloat32())
 							t.Logf("result == expected: %v", result == test.expected)
 							t.Logf("diff < -tolerance: %v, diff > tolerance: %v", diff < -tolerance, diff > tolerance)
-							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v", 
-								diff, tolerance, diff < -tolerance, 
+							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v",
+								diff, tolerance, diff < -tolerance,
 								diff, tolerance, diff > tolerance)
 							absDiff = -absDiff
 						}
-						
+
 						if absDiff > tolerance {
 							t.Errorf("AddWithMode(%s, %s, %s) = %s (0x%02x, %v), expected close to %s (0x%02x, %v), diff=%v, tolerance=%v, absDiff=%v",
-								test.a, test.b, mode.desc, 
+								test.a, test.b, mode.desc,
 								result, result, result.ToFloat32(),
 								test.expected, test.expected, test.expected.ToFloat32(),
 								diff, tolerance, absDiff)
 						} else {
 							// If we get here, the result is within tolerance, so the test passes
-							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)", 
+							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)",
 								result, tolerance, test.expected, diff, absDiff)
 							return
 						}
@@ -283,11 +283,11 @@ func TestAddBasic(t *testing.T) {
 		// Set to algorithmic mode and test Add uses it
 		DisableFastArithmetic()
 		result1 := Add(ToFloat8(1.0), ToFloat8(2.0))
-		
+
 		// Set to lookup mode and test Add uses it
 		EnableFastArithmetic()
 		result2 := Add(ToFloat8(1.0), ToFloat8(2.0))
-		
+
 		// Both should give the same result (just testing the function works with defaults)
 		if result1 != result2 {
 			t.Errorf("Add with different default modes gave different results: 0x%02x vs 0x%02x",
@@ -299,15 +299,15 @@ func TestAddBasic(t *testing.T) {
 func TestSubBasic(t *testing.T) {
 	// Save the current configuration to restore it later
 	origConfig := DefaultConfig()
-	
+
 	// Restore the original configuration after the test
 	defer Configure(origConfig)
 
 	tests := []struct {
-		a, b       Float8
-		expected   Float8
-		name       string
-		imprecise  bool // true if the result might be imprecise due to floating-point limitations
+		a, b      Float8
+		expected  Float8
+		name      string
+		imprecise bool // true if the result might be imprecise due to floating-point limitations
 	}{
 		{PositiveZero, PositiveZero, PositiveZero, "zero - zero", false},
 		{ToFloat8(1.0), PositiveZero, ToFloat8(1.0), "one - zero", false},
@@ -343,7 +343,7 @@ func TestSubBasic(t *testing.T) {
 				t.Run(test.name, func(t *testing.T) {
 					// Test SubWithMode with the current mode
 					result := SubWithMode(test.a, test.b, mode.name)
-					
+
 					// For imprecise operations, allow a small tolerance
 					if test.imprecise {
 						tolerance := ToFloat8(0.01)
@@ -358,21 +358,21 @@ func TestSubBasic(t *testing.T) {
 							t.Logf("result float: %v, expected float: %v", result.ToFloat32(), test.expected.ToFloat32())
 							t.Logf("result == expected: %v", result == test.expected)
 							t.Logf("diff < -tolerance: %v, diff > tolerance: %v", diff < -tolerance, diff > tolerance)
-							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v", 
-								diff, tolerance, diff < -tolerance, 
+							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v",
+								diff, tolerance, diff < -tolerance,
 								diff, tolerance, diff > tolerance)
 							absDiff = -absDiff
 						}
-						
+
 						if absDiff > tolerance {
 							t.Errorf("SubWithMode(%s, %s, %s) = %s (0x%02x, %v), expected close to %s (0x%02x, %v), diff=%v, tolerance=%v, absDiff=%v",
-								test.a, test.b, mode.desc, 
+								test.a, test.b, mode.desc,
 								result, result, result.ToFloat32(),
 								test.expected, test.expected, test.expected.ToFloat32(),
 								diff, tolerance, absDiff)
 						} else {
 							// If we get here, the result is within tolerance, so the test passes
-							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)", 
+							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)",
 								result, tolerance, test.expected, diff, absDiff)
 							return
 						}
@@ -390,11 +390,11 @@ func TestSubBasic(t *testing.T) {
 		// Set to algorithmic mode and test Sub uses it
 		DisableFastArithmetic()
 		result1 := Sub(ToFloat8(1.0), ToFloat8(0.5))
-		
+
 		// Set to lookup mode and test Sub uses it
 		EnableFastArithmetic()
 		result2 := Sub(ToFloat8(1.0), ToFloat8(0.5))
-		
+
 		// Both should give the same result (just testing the function works with defaults)
 		if result1 != result2 {
 			t.Errorf("Sub with different default modes gave different results: 0x%02x vs 0x%02x",
@@ -406,22 +406,22 @@ func TestSubBasic(t *testing.T) {
 func TestMulBasic(t *testing.T) {
 	// Save the current configuration to restore it later
 	origConfig := DefaultConfig()
-	
+
 	// Restore the original configuration after the test
 	defer Configure(origConfig)
 
 	tests := []struct {
-		a, b       Float8
-		expected   Float8
-		name       string
-		imprecise  bool // true if the result might be imprecise due to floating-point limitations
+		a, b      Float8
+		expected  Float8
+		name      string
+		imprecise bool // true if the result might be imprecise due to floating-point limitations
 	}{
 		// Basic multiplication
 		{PositiveZero, ToFloat8(1.0), PositiveZero, "zero * one", false},
 		{ToFloat8(1.0), ToFloat8(1.0), ToFloat8(1.0), "one * one", false},
 		{ToFloat8(2.0), ToFloat8(3.0), ToFloat8(6.0), "two * three", false},
 		{ToFloat8(-1.0), ToFloat8(1.0), ToFloat8(-1.0), "(-one) * one", false},
-		
+
 		// Zero multiplication
 		{PositiveZero, PositiveZero, PositiveZero, "+0 * +0", false},
 		{NegativeZero, NegativeZero, PositiveZero, "-0 * -0", false},
@@ -429,7 +429,7 @@ func TestMulBasic(t *testing.T) {
 		{NegativeZero, PositiveZero, NegativeZero, "-0 * +0", false},
 		{PositiveZero, ToFloat8(5.0), PositiveZero, "+0 * 5", false},
 		{ToFloat8(5.0), NegativeZero, NegativeZero, "5 * -0", false},
-		
+
 		// Infinity multiplication
 		{PositiveInfinity, ToFloat8(2.0), PositiveInfinity, "+Inf * 2", false},
 		{NegativeInfinity, ToFloat8(2.0), NegativeInfinity, "-Inf * 2", false},
@@ -438,20 +438,20 @@ func TestMulBasic(t *testing.T) {
 		{PositiveInfinity, PositiveInfinity, PositiveInfinity, "+Inf * +Inf", false},
 		{PositiveInfinity, NegativeInfinity, NegativeInfinity, "+Inf * -Inf", false},
 		{NegativeInfinity, NegativeInfinity, PositiveInfinity, "-Inf * -Inf", false},
-		
+
 		// NaN cases
 		{NaN, ToFloat8(1.0), NaN, "NaN * 1", false},
 		{ToFloat8(1.0), NaN, NaN, "1 * NaN", false},
 		{NaN, NaN, NaN, "NaN * NaN", false},
 		{NaN, PositiveInfinity, NaN, "NaN * +Inf", false},
 		{PositiveInfinity, NaN, NaN, "+Inf * NaN", false},
-		
+
 		// Fractional multiplication
 		{ToFloat8(0.5), ToFloat8(0.5), ToFloat8(0.25), "0.5 * 0.5", false},
 		{ToFloat8(0.3), ToFloat8(0.3), ToFloat8(0.09), "0.3 * 0.3 (imprecise)", true},
 		{ToFloat8(1.5), ToFloat8(0.5), ToFloat8(0.75), "1.5 * 0.5", false},
 		{ToFloat8(1.5), ToFloat8(2.0), ToFloat8(3.0), "1.5 * 2.0", false},
-		
+
 		// Edge cases
 		{PositiveInfinity, ToFloat8(0.0), NaN, "+Inf * 0", false}, // Should be NaN per IEEE 754
 		{NegativeInfinity, ToFloat8(0.0), NaN, "-Inf * 0", false}, // Should be NaN per IEEE 754
@@ -482,7 +482,7 @@ func TestMulBasic(t *testing.T) {
 				t.Run(test.name, func(t *testing.T) {
 					// Test MulWithMode with the current mode
 					result := MulWithMode(test.a, test.b, mode.name)
-					
+
 					// For imprecise operations, allow a small tolerance
 					if test.imprecise {
 						tolerance := ToFloat8(0.01)
@@ -497,21 +497,21 @@ func TestMulBasic(t *testing.T) {
 							t.Logf("result float: %v, expected float: %v", result.ToFloat32(), test.expected.ToFloat32())
 							t.Logf("result == expected: %v", result == test.expected)
 							t.Logf("diff < -tolerance: %v, diff > tolerance: %v", diff < -tolerance, diff > tolerance)
-							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v", 
-								diff, tolerance, diff < -tolerance, 
+							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v",
+								diff, tolerance, diff < -tolerance,
 								diff, tolerance, diff > tolerance)
 							absDiff = -absDiff
 						}
-						
+
 						if absDiff > tolerance {
 							t.Errorf("MulWithMode(%s, %s, %s) = %s (0x%02x, %v), expected close to %s (0x%02x, %v), diff=%v, tolerance=%v, absDiff=%v",
-								test.a, test.b, mode.desc, 
+								test.a, test.b, mode.desc,
 								result, result, result.ToFloat32(),
 								test.expected, test.expected, test.expected.ToFloat32(),
 								diff, tolerance, absDiff)
 						} else {
 							// If we get here, the result is within tolerance, so the test passes
-							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)", 
+							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)",
 								result, tolerance, test.expected, diff, absDiff)
 							return
 						}
@@ -529,11 +529,11 @@ func TestMulBasic(t *testing.T) {
 		// Set to algorithmic mode and test Mul uses it
 		DisableFastArithmetic()
 		result1 := Mul(ToFloat8(1.5), ToFloat8(2.0))
-		
+
 		// Set to lookup mode and test Mul uses it
 		EnableFastArithmetic()
 		result2 := Mul(ToFloat8(1.5), ToFloat8(2.0))
-		
+
 		// Both should give the same result (just testing the function works with defaults)
 		if result1 != result2 {
 			t.Errorf("Mul with different default modes gave different results: 0x%02x vs 0x%02x",
@@ -545,15 +545,15 @@ func TestMulBasic(t *testing.T) {
 func TestDivBasic(t *testing.T) {
 	// Save the current configuration to restore it later
 	origConfig := DefaultConfig()
-	
+
 	// Restore the original configuration after the test
 	defer Configure(origConfig)
 
 	tests := []struct {
-		a, b       Float8
-		expected   Float8
-		name       string
-		imprecise  bool // true if the result might be imprecise due to floating-point limitations
+		a, b      Float8
+		expected  Float8
+		name      string
+		imprecise bool // true if the result might be imprecise due to floating-point limitations
 	}{
 		// Basic division
 		{PositiveZero, ToFloat8(1.0), PositiveZero, "zero / one", false},
@@ -563,25 +563,25 @@ func TestDivBasic(t *testing.T) {
 		{ToFloat8(9.0), ToFloat8(3.0), ToFloat8(3.0), "nine / three", false},
 		{ToFloat8(-1.0), ToFloat8(2.0), ToFloat8(-0.5), "-one / two", false},
 		{ToFloat8(-1.0), ToFloat8(-2.0), ToFloat8(0.5), "-one / -two", false},
-		
+
 		// Division by zero
 		{ToFloat8(1.0), PositiveZero, PositiveInfinity, "one / +0", false},
 		{ToFloat8(-1.0), PositiveZero, NegativeInfinity, "-one / +0", false},
 		{ToFloat8(1.0), NegativeZero, NegativeInfinity, "one / -0", false},
 		{ToFloat8(-1.0), NegativeZero, PositiveInfinity, "-one / -0", false},
-		
+
 		// Zero divided by non-zero
 		{PositiveZero, ToFloat8(2.0), PositiveZero, "+0 / two", false},
 		{NegativeZero, ToFloat8(2.0), NegativeZero, "-0 / two", false},
 		{PositiveZero, ToFloat8(-2.0), NegativeZero, "+0 / -two", false},
 		{NegativeZero, ToFloat8(-2.0), PositiveZero, "-0 / -two", false},
-		
+
 		// Zero divided by zero (should return NaN per IEEE 754)
 		{PositiveZero, PositiveZero, NaN, "+0 / +0 (NaN case)", false},
 		{PositiveZero, NegativeZero, NaN, "+0 / -0 (NaN case)", false},
 		{NegativeZero, PositiveZero, NaN, "-0 / +0 (NaN case)", false},
 		{NegativeZero, NegativeZero, NaN, "-0 / -0 (NaN case)", false},
-		
+
 		// Infinity cases
 		{PositiveInfinity, ToFloat8(2.0), PositiveInfinity, "+Inf / two", false},
 		{PositiveInfinity, ToFloat8(-2.0), NegativeInfinity, "+Inf / -two", false},
@@ -595,14 +595,14 @@ func TestDivBasic(t *testing.T) {
 		{PositiveInfinity, NegativeInfinity, NaN, "+Inf / -Inf (NaN case)", false},
 		{NegativeInfinity, PositiveInfinity, NaN, "-Inf / +Inf (NaN case)", false},
 		{NegativeInfinity, NegativeInfinity, NaN, "-Inf / -Inf (NaN case)", false},
-		
+
 		// NaN cases
 		{NaN, ToFloat8(2.0), NaN, "NaN / two", false},
 		{ToFloat8(2.0), NaN, NaN, "two / NaN", false},
 		{NaN, NaN, NaN, "NaN / NaN", false},
 		{NaN, PositiveInfinity, NaN, "NaN / +Inf", false},
 		{PositiveInfinity, NaN, NaN, "+Inf / NaN", false},
-		
+
 		// Imprecise divisions
 		{ToFloat8(0.3), ToFloat8(0.1), ToFloat8(3.0), "0.3 / 0.1 (imprecise)", true},
 		{ToFloat8(1.0), ToFloat8(3.0), ToFloat8(0.333333), "one / three (imprecise)", true},
@@ -633,7 +633,7 @@ func TestDivBasic(t *testing.T) {
 				t.Run(test.name, func(t *testing.T) {
 					// Test DivWithMode with the current mode
 					result := DivWithMode(test.a, test.b, mode.name)
-					
+
 					// For imprecise operations, allow a small tolerance
 					if test.imprecise {
 						tolerance := ToFloat8(0.01)
@@ -648,47 +648,47 @@ func TestDivBasic(t *testing.T) {
 							t.Logf("result float: %v, expected float: %v", result.ToFloat32(), test.expected.ToFloat32())
 							t.Logf("result == expected: %v", result == test.expected)
 							t.Logf("diff < -tolerance: %v, diff > tolerance: %v", diff < -tolerance, diff > tolerance)
-							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v", 
-								diff, tolerance, diff < -tolerance, 
+							t.Logf("diff < -tolerance: %v < -%v: %v, diff > tolerance: %v > %v: %v",
+								diff, tolerance, diff < -tolerance,
 								diff, tolerance, diff > tolerance)
-							t.Logf("result / expected: %v, expected / result: %v", 
+							t.Logf("result / expected: %v, expected / result: %v",
 								result.ToFloat32()/test.expected.ToFloat32(),
 								test.expected.ToFloat32()/result.ToFloat32())
-							t.Logf("1 - (result / expected): %v, 1 - (expected / result): %v", 
-								1 - result.ToFloat32()/test.expected.ToFloat32(),
-								1 - test.expected.ToFloat32()/result.ToFloat32())
+							t.Logf("1 - (result / expected): %v, 1 - (expected / result): %v",
+								1-result.ToFloat32()/test.expected.ToFloat32(),
+								1-test.expected.ToFloat32()/result.ToFloat32())
 							absDiff = -absDiff
 						}
-						
+
 						// For division, we should also check the relative error
 						// since small absolute differences can be significant for small numbers
 						relTolerance := float32(0.05) // 5% relative tolerance
 						resultF := result.ToFloat32()
 						expectedF := test.expected.ToFloat32()
-						
+
 						// Avoid division by zero or very small numbers
 						if expectedF != 0 && abs(float32(absDiff)) > tolerance.ToFloat32() {
 							relDiff := abs(1 - (resultF / expectedF))
 							if relDiff > relTolerance {
 								t.Errorf("DivWithMode(%s, %s, %s) = %s (0x%02x, %v), expected close to %s (0x%02x, %v), diff=%v, absDiff=%v, relDiff=%.2f%%",
-									test.a, test.b, mode.desc, 
+									test.a, test.b, mode.desc,
 									result, result, resultF,
 									test.expected, test.expected, expectedF,
 									diff, absDiff, relDiff*100)
 							} else {
-								t.Logf("Test passed within relative tolerance: result %v is within %.2f%% of expected %v (diff=%v, absDiff=%v, relDiff=%.2f%%)", 
+								t.Logf("Test passed within relative tolerance: result %v is within %.2f%% of expected %v (diff=%v, absDiff=%v, relDiff=%.2f%%)",
 									result, relTolerance*100, test.expected, diff, absDiff, relDiff*100)
 								return
 							}
 						} else if absDiff > tolerance {
 							t.Errorf("DivWithMode(%s, %s, %s) = %s (0x%02x, %v), expected close to %s (0x%02x, %v), diff=%v, tolerance=%v, absDiff=%v",
-								test.a, test.b, mode.desc, 
+								test.a, test.b, mode.desc,
 								result, result, resultF,
 								test.expected, test.expected, expectedF,
 								diff, tolerance, absDiff)
 						} else {
 							// If we get here, the result is within tolerance, so the test passes
-							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)", 
+							t.Logf("Test passed: result %v is within tolerance %v of expected %v (diff=%v, absDiff=%v)",
 								result, tolerance, test.expected, diff, absDiff)
 							return
 						}
@@ -706,11 +706,11 @@ func TestDivBasic(t *testing.T) {
 		// Set to algorithmic mode and test Div uses it
 		DisableFastArithmetic()
 		result1 := Div(ToFloat8(1.0), ToFloat8(2.0))
-		
+
 		// Set to lookup mode and test Div uses it
 		EnableFastArithmetic()
 		result2 := Div(ToFloat8(1.0), ToFloat8(2.0))
-		
+
 		// Both should give the same result (just testing the function works with defaults)
 		if result1 != result2 {
 			t.Errorf("Div with different default modes gave different results: 0x%02x vs 0x%02x",
@@ -760,19 +760,19 @@ func TestEqual(t *testing.T) {
 		{NegativeZero, NegativeZero, true, "-0 == -0"},
 		{PositiveZero, NegativeZero, true, "+0 == -0"},
 		{NegativeZero, PositiveZero, true, "-0 == +0"},
-		
+
 		// Regular number cases
 		{ToFloat8(1.0), ToFloat8(1.0), true, "1.0 == 1.0"},
 		{ToFloat8(1.0), ToFloat8(2.0), false, "1.0 != 2.0"},
 		{ToFloat8(-1.0), ToFloat8(-1.0), true, "-1.0 == -1.0"},
 		{ToFloat8(1.5), ToFloat8(1.5), true, "1.5 == 1.5"},
-		
+
 		// Infinity cases
 		{PositiveInfinity, PositiveInfinity, true, "+Inf == +Inf"},
 		{NegativeInfinity, NegativeInfinity, true, "-Inf == -Inf"},
 		{PositiveInfinity, NegativeInfinity, false, "+Inf != -Inf"},
 		{NegativeInfinity, PositiveInfinity, false, "-Inf != +Inf"},
-		
+
 		// NaN cases (NaN is not equal to anything, including itself)
 		{NaN, NaN, false, "NaN != NaN (by definition)"},
 		{NaN, PositiveInfinity, false, "NaN != +Inf"},
@@ -785,7 +785,7 @@ func TestEqual(t *testing.T) {
 		{PositiveZero, NaN, false, "+0 != NaN"},
 		{NegativeZero, NaN, false, "-0 != NaN"},
 		{ToFloat8(1.0), NaN, false, "1.0 != NaN"},
-		
+
 		// Mixed cases
 		{PositiveInfinity, ToFloat8(1.0), false, "+Inf != 1.0"},
 		{NegativeInfinity, ToFloat8(-1.0), false, "-Inf != -1.0"},
@@ -807,9 +807,9 @@ func TestEqual(t *testing.T) {
 
 func TestMinMax(t *testing.T) {
 	tests := []struct {
-		a, b     Float8
+		a, b                     Float8
 		expectedMin, expectedMax Float8
-		desc     string
+		desc                     string
 	}{
 		{ToFloat8(1.0), ToFloat8(2.0), ToFloat8(1.0), ToFloat8(2.0), "1.0 < 2.0"},
 		{ToFloat8(2.0), ToFloat8(1.0), ToFloat8(1.0), ToFloat8(2.0), "2.0 > 1.0"},
@@ -831,19 +831,19 @@ func TestMinMax(t *testing.T) {
 
 			// Test Min
 			minResult := Min(test.a, test.b)
-			t.Logf("Min(%v, %v) = %v (bits: %08b), expected %v (bits: %08b)", 
+			t.Logf("Min(%v, %v) = %v (bits: %08b), expected %v (bits: %08b)",
 				test.a, test.b, minResult, minResult, test.expectedMin, test.expectedMin)
 			if !Equal(minResult, test.expectedMin) {
-				t.Errorf("Min(%v, %v) = %v, expected %v", 
+				t.Errorf("Min(%v, %v) = %v, expected %v",
 					test.a, test.b, minResult, test.expectedMin)
 			}
 
 			// Test Max
 			maxResult := Max(test.a, test.b)
-			t.Logf("Max(%v, %v) = %v (bits: %08b), expected %v (bits: %08b)", 
+			t.Logf("Max(%v, %v) = %v (bits: %08b), expected %v (bits: %08b)",
 				test.a, test.b, maxResult, maxResult, test.expectedMax, test.expectedMax)
 			if !Equal(maxResult, test.expectedMax) {
-				t.Errorf("Max(%v, %v) = %v, expected %v", 
+				t.Errorf("Max(%v, %v) = %v, expected %v",
 					test.a, test.b, maxResult, test.expectedMax)
 			}
 
@@ -851,14 +851,14 @@ func TestMinMax(t *testing.T) {
 			revMin := Min(test.b, test.a)
 			t.Logf("Min(%v, %v) = %v (commutative test)", test.b, test.a, revMin)
 			if !Equal(revMin, minResult) {
-				t.Errorf("Min(%v, %v) = %v, expected %v (commutative test)", 
+				t.Errorf("Min(%v, %v) = %v, expected %v (commutative test)",
 					test.b, test.a, revMin, minResult)
 			}
 
 			revMax := Max(test.b, test.a)
 			t.Logf("Max(%v, %v) = %v (commutative test)", test.b, test.a, revMax)
 			if !Equal(revMax, maxResult) {
-				t.Errorf("Max(%v, %v) = %v, expected %v (commutative test)", 
+				t.Errorf("Max(%v, %v) = %v, expected %v (commutative test)",
 					test.b, test.a, revMax, maxResult)
 			}
 		})
@@ -867,7 +867,7 @@ func TestMinMax(t *testing.T) {
 	// Additional test for NaN handling
 	t.Run("NaN handling", func(t *testing.T) {
 		a := ToFloat8(1.0)
-		
+
 		// Min/Max with NaN as first argument
 		minResult1 := Min(NaN, a)
 		if !minResult1.IsNaN() {
@@ -877,7 +877,7 @@ func TestMinMax(t *testing.T) {
 		if !maxResult1.IsNaN() {
 			t.Errorf("Max(NaN, %v) = %v, expected NaN", a, maxResult1)
 		}
-		
+
 		// Min/Max with NaN as second argument
 		minResult2 := Min(a, NaN)
 		if !minResult2.IsNaN() {
@@ -928,7 +928,7 @@ func TestSign(t *testing.T) {
 		{"nan", NaN, 0},
 		// Additional edge cases
 		// Note: Small positive/negative values that round to zero are treated as zero
-		{"small_positive", ToFloat8(1e-1), 1}, // Use a larger value that doesn't round to zero
+		{"small_positive", ToFloat8(1e-1), 1},   // Use a larger value that doesn't round to zero
 		{"small_negative", ToFloat8(-1e-1), -1}, // Use a larger value that doesn't round to zero
 		{"max_positive", MaxValue, 1},
 		{"min_negative", ToFloat8(-1 * float32(MaxValue.ToFloat32())), -1},
@@ -997,15 +997,15 @@ func TestToSlice8(t *testing.T) {
 	t.Run("multiple_elements", func(t *testing.T) {
 		// Create a proper negative zero value
 		negZero := float32(math.Copysign(0, -1))
-		
+
 		input := []float32{1.5, -2.25, 3.75, 0, negZero, float32(math.Inf(1)), float32(math.Inf(-1)), float32(math.NaN())}
 		expected := []Float8{
-			ToFloat8(1.5), 
-			ToFloat8(-2.25), 
-			ToFloat8(3.75), 
-			PositiveZero, 
-			NegativeZero, 
-			PositiveInfinity, 
+			ToFloat8(1.5),
+			ToFloat8(-2.25),
+			ToFloat8(3.75),
+			PositiveZero,
+			NegativeZero,
+			PositiveInfinity,
 			NegativeInfinity,
 			NaN,
 		}
@@ -1109,7 +1109,7 @@ func TestTrigonometricFunctions(t *testing.T) {
 		{"sin(2pi)", ToFloat8(2 * math.Pi), ToFloat8(0.0), 0.5, Sin}, // Very lenient tolerance for sin(2pi)
 		{"sin(inf)", PositiveInfinity, PositiveZero, 0, Sin},
 		{"sin(-inf)", NegativeInfinity, PositiveZero, 0, Sin},
-		
+
 		// Test cases for Cos
 		{"cos(0)", PositiveZero, ToFloat8(1.0), 0, Cos},
 		{"cos(-0)", NegativeZero, ToFloat8(1.0), 0, Cos},
@@ -1119,13 +1119,13 @@ func TestTrigonometricFunctions(t *testing.T) {
 		{"cos(2pi)", ToFloat8(2 * math.Pi), ToFloat8(1.0), 0.01, Cos},
 		{"cos(inf)", PositiveInfinity, PositiveZero, 0, Cos},
 		{"cos(-inf)", NegativeInfinity, PositiveZero, 0, Cos},
-		
+
 		// Test cases for Tan
 		{"tan(0)", PositiveZero, PositiveZero, 0, Tan},
 		{"tan(-0)", NegativeZero, NegativeZero, 0, Tan},
 		{"tan(pi/4)", ToFloat8(math.Pi / 4), ToFloat8(1.0), 0.01, Tan},
 		{"tan(-pi/4)", ToFloat8(-math.Pi / 4), ToFloat8(-1.0), 0.01, Tan},
-		{"tan(pi)", ToFloat8(math.Pi), ToFloat8(0.0), 0.5, Tan}, // Very lenient tolerance for tan(pi)
+		{"tan(pi)", ToFloat8(math.Pi), ToFloat8(0.0), 0.5, Tan},      // Very lenient tolerance for tan(pi)
 		{"tan(2pi)", ToFloat8(2 * math.Pi), ToFloat8(0.0), 0.5, Tan}, // Very lenient tolerance for tan(2pi)
 		{"tan(inf)", PositiveInfinity, PositiveZero, 0, Tan},
 		{"tan(-inf)", NegativeInfinity, PositiveZero, 0, Tan},
@@ -1134,7 +1134,7 @@ func TestTrigonometricFunctions(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.fn(test.input)
-			
+
 			// For exact matches (tolerance = 0), use exact comparison
 			if test.tol == 0 {
 				if result != test.expected {
@@ -1145,7 +1145,7 @@ func TestTrigonometricFunctions(t *testing.T) {
 				// For approximate matches, check if the result is within tolerance
 				resultF := result.ToFloat32()
 				expectedF := test.expected.ToFloat32()
-				
+
 				// Handle the case where expected is zero to avoid division by zero
 				if expectedF == 0 {
 					if resultF > test.tol || resultF < -test.tol {
@@ -1177,7 +1177,7 @@ func TestRoundingFunctions(t *testing.T) {
 		{"floor(-0.0)", NegativeZero, NegativeZero, Floor},
 		{"floor(inf)", PositiveInfinity, PositiveInfinity, Floor},
 		{"floor(-inf)", NegativeInfinity, NegativeInfinity, Floor},
-		
+
 		// Test cases for Ceil
 		{"ceil(1.5)", ToFloat8(1.5), ToFloat8(2.0), Ceil},
 		{"ceil(-1.5)", ToFloat8(-1.5), ToFloat8(-1.0), Ceil},
@@ -1187,7 +1187,7 @@ func TestRoundingFunctions(t *testing.T) {
 		{"ceil(-0.0)", NegativeZero, NegativeZero, Ceil},
 		{"ceil(inf)", PositiveInfinity, PositiveInfinity, Ceil},
 		{"ceil(-inf)", NegativeInfinity, NegativeInfinity, Ceil},
-		
+
 		// Test cases for Round
 		{"round(1.4)", ToFloat8(1.4), ToFloat8(1.0), Round},
 		{"round(1.5)", ToFloat8(1.5), ToFloat8(2.0), Round}, // Ties away from zero
@@ -1199,7 +1199,7 @@ func TestRoundingFunctions(t *testing.T) {
 		{"round(-0.0)", NegativeZero, NegativeZero, Round},
 		{"round(inf)", PositiveInfinity, PositiveInfinity, Round},
 		{"round(-inf)", NegativeInfinity, NegativeInfinity, Round},
-		
+
 		// Test cases for Trunc
 		{"trunc(1.9)", ToFloat8(1.9), ToFloat8(1.0), Trunc},
 		{"trunc(-1.9)", ToFloat8(-1.9), ToFloat8(-1.0), Trunc},
@@ -1224,8 +1224,8 @@ func TestRoundingFunctions(t *testing.T) {
 
 func TestFmod(t *testing.T) {
 	tests := []struct {
-		a, b      Float8
-		expected  Float8
+		a, b     Float8
+		expected Float8
 		name     string
 		tol      float32 // Tolerance for floating-point comparison
 	}{
@@ -1235,7 +1235,7 @@ func TestFmod(t *testing.T) {
 		{ToFloat8(-5.0), ToFloat8(2.0), ToFloat8(-1.0), "-5 % 2 = -1", 0},
 		{ToFloat8(5.0), ToFloat8(-2.0), ToFloat8(1.0), "5 % -2 = 1", 0},
 		{ToFloat8(-5.0), ToFloat8(-2.0), ToFloat8(-1.0), "-5 % -2 = -1", 0},
-		
+
 		// Edge cases
 		{PositiveZero, ToFloat8(2.0), PositiveZero, "0 % 2 = 0", 0},
 		{NegativeZero, ToFloat8(2.0), NegativeZero, "-0 % 2 = -0", 0},
@@ -1243,26 +1243,26 @@ func TestFmod(t *testing.T) {
 		{ToFloat8(-5.0), PositiveInfinity, ToFloat8(-5.0), "-5 % inf = -5", 0},
 		{PositiveInfinity, ToFloat8(2.0), PositiveZero, "inf % 2 = 0", 0},
 		{NegativeInfinity, ToFloat8(2.0), PositiveZero, "-inf % 2 = 0", 0},
-		{ToFloat8(5.0), PositiveZero, PositiveZero, "5 % 0 = 0", 0}, // Undefined, but our implementation returns 0
+		{ToFloat8(5.0), PositiveZero, PositiveZero, "5 % 0 = 0", 0},  // Undefined, but our implementation returns 0
 		{ToFloat8(0.0), ToFloat8(0.0), PositiveZero, "0 % 0 = 0", 0}, // Undefined, but our implementation returns 0
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := Fmod(test.a, test.b)
-			
+
 			// For exact matches (tolerance = 0), use exact comparison
 			if test.tol == 0 {
 				if result != test.expected {
-					t.Errorf("Fmod(%v, %v) = %v, expected %v", 
-						test.a.ToFloat32(), test.b.ToFloat32(), 
+					t.Errorf("Fmod(%v, %v) = %v, expected %v",
+						test.a.ToFloat32(), test.b.ToFloat32(),
 						result.ToFloat32(), test.expected.ToFloat32())
 				}
 			} else {
 				// For approximate matches, check if the result is within tolerance
 				resultF := result.ToFloat32()
 				expectedF := test.expected.ToFloat32()
-				
+
 				// Handle the case where expected is zero to avoid division by zero
 				if expectedF == 0 {
 					if resultF > test.tol || resultF < -test.tol {
@@ -1278,7 +1278,7 @@ func TestFmod(t *testing.T) {
 	}
 }
 
-func TestSqrt(t * testing.T) {
+func TestSqrt(t *testing.T) {
 	tests := []struct {
 		input    Float8
 		expected Float8
@@ -1291,23 +1291,23 @@ func TestSqrt(t * testing.T) {
 		{ToFloat8(4.0), ToFloat8(2.0), "sqrt(4)", 0},
 		{ToFloat8(9.0), ToFloat8(3.0), "sqrt(9)", 0},
 		{ToFloat8(0.25), ToFloat8(0.5), "sqrt(0.25)", 0},
-		
+
 		// Edge cases
 		{PositiveInfinity, PositiveInfinity, "sqrt(inf)", 0},
-		
+
 		// Negative numbers should return zero (NaN equivalent)
 		{ToFloat8(-1.0), PositiveZero, "sqrt(-1)", 0},
 		{ToFloat8(-4.0), PositiveZero, "sqrt(-4)", 0},
 		{NegativeInfinity, PositiveZero, "sqrt(-inf)", 0},
-		
+
 		// Denormalized numbers - we'll accept any small positive value for these
 		{0x01, ToFloat8(0.0), "sqrt(smallest denormal)", 0.1}, // Accept any small positive value
-		{0x10, ToFloat8(0.0), "sqrt(denormal)", 0.2}, // Accept any small positive value
-		
+		{0x10, ToFloat8(0.0), "sqrt(denormal)", 0.2},          // Accept any small positive value
+
 		// Numbers between 0 and 1
 		{ToFloat8(0.5), ToFloat8(0.7071), "sqrt(0.5)", 0.01},
 		{ToFloat8(0.1), ToFloat8(0.3162), "sqrt(0.1)", 0.01},
-		
+
 		// Large numbers
 		{ToFloat8(100.0), ToFloat8(10.0), "sqrt(100)", 0.1},
 		{ToFloat8(200.0), ToFloat8(14.1421), "sqrt(200)", 0.1},
@@ -1316,7 +1316,7 @@ func TestSqrt(t * testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := Sqrt(test.input)
-			
+
 			// For exact matches (tolerance = 0), use exact comparison
 			if test.tol == 0 {
 				if result != test.expected {
@@ -1327,7 +1327,7 @@ func TestSqrt(t * testing.T) {
 				// For approximate matches, check if the result is within tolerance
 				resultF := result.ToFloat32()
 				expectedF := test.expected.ToFloat32()
-				
+
 				// Handle the case where expected is zero to avoid division by zero
 				if expectedF == 0 {
 					if resultF > test.tol || resultF < -test.tol {
@@ -1348,20 +1348,20 @@ func TestConfigure(t *testing.T) {
 	origConfig := DefaultConfig()
 	origConversionMode := DefaultConversionMode
 	origArithmeticMode := DefaultArithmeticMode
-	
+
 	// Restore the original configuration after the test
 	defer func() {
 		Configure(origConfig)
 		DefaultConversionMode = origConversionMode
 		DefaultArithmeticMode = origArithmeticMode
 	}()
-	
+
 	tests := []struct {
 		name                string
 		enableFastArith     bool
 		enableFastConv      bool
-		defaultMode        ConversionMode
-		arithmeticMode     ArithmeticMode
+		defaultMode         ConversionMode
+		arithmeticMode      ArithmeticMode
 		expectedArithTables bool
 		expectedConvTable   bool
 	}{
@@ -1369,17 +1369,17 @@ func TestConfigure(t *testing.T) {
 			name:                "enable fast arithmetic only",
 			enableFastArith:     true,
 			enableFastConv:      false,
-			defaultMode:        ModeDefault,
-			arithmeticMode:     ArithmeticAuto,
+			defaultMode:         ModeDefault,
+			arithmeticMode:      ArithmeticAuto,
 			expectedArithTables: true,
 			expectedConvTable:   false,
 		},
 		{
 			name:                "enable fast conversion only",
-				enableFastArith:     false,
+			enableFastArith:     false,
 			enableFastConv:      true,
-			defaultMode:        ModeStrict,
-			arithmeticMode:     ArithmeticAlgorithmic,
+			defaultMode:         ModeStrict,
+			arithmeticMode:      ArithmeticAlgorithmic,
 			expectedArithTables: false,
 			expectedConvTable:   true,
 		},
@@ -1387,8 +1387,8 @@ func TestConfigure(t *testing.T) {
 			name:                "enable both fast modes",
 			enableFastArith:     true,
 			enableFastConv:      true,
-			defaultMode:        ModeDefault,
-			arithmeticMode:     ArithmeticLookup,
+			defaultMode:         ModeDefault,
+			arithmeticMode:      ArithmeticLookup,
 			expectedArithTables: true,
 			expectedConvTable:   true,
 		},
@@ -1396,13 +1396,13 @@ func TestConfigure(t *testing.T) {
 			name:                "disable both fast modes",
 			enableFastArith:     false,
 			enableFastConv:      false,
-			defaultMode:        ModeDefault,
-			arithmeticMode:     ArithmeticAlgorithmic,
+			defaultMode:         ModeDefault,
+			arithmeticMode:      ArithmeticAlgorithmic,
 			expectedArithTables: false,
 			expectedConvTable:   false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create and apply the test configuration
@@ -1413,22 +1413,22 @@ func TestConfigure(t *testing.T) {
 				ArithmeticMode:       tt.arithmeticMode,
 			}
 			Configure(config)
-			
+
 			// Verify the configuration was applied correctly
 			if addTable != nil != tt.expectedArithTables {
-				t.Errorf("Unexpected arithmetic tables state: got %v, want %v", 
+				t.Errorf("Unexpected arithmetic tables state: got %v, want %v",
 					addTable != nil, tt.expectedArithTables)
 			}
 			if conversionTable != nil != tt.expectedConvTable {
-				t.Errorf("Unexpected conversion table state: got %v, want %v", 
+				t.Errorf("Unexpected conversion table state: got %v, want %v",
 					conversionTable != nil, tt.expectedConvTable)
 			}
 			if DefaultConversionMode != tt.defaultMode {
-				t.Errorf("DefaultConversionMode = %v, want %v", 
+				t.Errorf("DefaultConversionMode = %v, want %v",
 					DefaultConversionMode, tt.defaultMode)
 			}
 			if DefaultArithmeticMode != tt.arithmeticMode {
-				t.Errorf("DefaultArithmeticMode = %v, want %v", 
+				t.Errorf("DefaultArithmeticMode = %v, want %v",
 					DefaultArithmeticMode, tt.arithmeticMode)
 			}
 		})
