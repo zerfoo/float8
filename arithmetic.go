@@ -16,7 +16,7 @@ var DefaultArithmeticMode = ArithmeticAuto
 //
 //	Add(+0, ±0) = +0
 //	Add(-0, -0) = -0
-//	Add(±Inf, ∓Inf) = NaN (but returns +0 in this implementation)
+//	Add(±Inf, ∓Inf) = NaN
 //	Add(NaN, x) = NaN
 //	Add(x, NaN) = NaN
 //
@@ -36,7 +36,7 @@ func Add(a, b Float8) Float8 {
 // Special cases are handled according to IEEE 754 rules:
 //   - If either operand is NaN, the result is NaN
 //   - Infinities of the same sign add to infinity of that sign
-//   - Infinities of opposite signs produce NaN (but this implementation returns +0)
+//   - Infinities of opposite signs produce NaN
 //   - The sign of a zero result is the sign of the sum of the operands
 //
 // For finite numbers, the result is rounded to the nearest representable Float8 value.
@@ -63,7 +63,7 @@ func AddWithMode(a, b Float8, mode ArithmeticMode) Float8 {
 //	Sub(+0, -0) = +0
 //	Sub(-0, +0) = -0
 //	Sub(-0, -0) = +0
-//	Sub(±Inf, ±Inf) = NaN (but returns +0 in this implementation)
+//	Sub(±Inf, ±Inf) = NaN
 //	Sub(NaN, x) = NaN
 //	Sub(x, NaN) = NaN
 //

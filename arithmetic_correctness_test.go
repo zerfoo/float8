@@ -323,7 +323,8 @@ func TestArithmeticIdentities(t *testing.T) {
 		label := fmt.Sprintf("0x%02x", i)
 
 		// a + 0 = a (for non-NaN values)
-		if !a.IsNaN() {
+		// IEEE 754 §6.3: (-0) + (+0) = +0, so skip negative zero
+		if !a.IsNaN() && a != NegativeZero {
 			got := Add(a, PositiveZero)
 			if got != a {
 				t.Errorf("%s: Add(a, +0) = 0x%02x, want 0x%02x", label, uint8(got), i)
