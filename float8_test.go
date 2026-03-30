@@ -206,7 +206,7 @@ func TestAddBasic(t *testing.T) {
 		{ToFloat8(1.0), ToFloat8(1.0), ToFloat8(2.0), "one + one", false},
 		{ToFloat8(2.0), ToFloat8(3.0), ToFloat8(5.0), "two + three", false},
 		{PositiveInfinity, ToFloat8(1.0), PositiveInfinity, "inf + one", false},
-		{PositiveInfinity, NegativeInfinity, PositiveZero, "inf + (-inf)", false},
+		{PositiveInfinity, NegativeInfinity, NaN, "inf + (-inf)", false},
 		{ToFloat8(1.5), ToFloat8(1.5), ToFloat8(3.0), "1.5 + 1.5", false},
 		{ToFloat8(-1.0), ToFloat8(1.0), ToFloat8(0.0), "-1 + 1", false},
 		{ToFloat8(0.5), ToFloat8(0.5), ToFloat8(1.0), "0.5 + 0.5", false},
