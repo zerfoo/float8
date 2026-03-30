@@ -148,7 +148,18 @@ func DivWithMode(a, b Float8, mode ArithmeticMode) Float8 {
 // Algorithmic implementations
 
 func addAlgorithmic(a, b Float8) Float8 {
-	// Handle special cases
+	// Handle NaN cases first — NaN propagates through all operations
+	if a.IsNaN() || b.IsNaN() {
+		return NaN
+	}
+
+	// Handle zero cases with IEEE 754 sign rules: (+0) + (-0) = +0
+	if a.IsZero() && b.IsZero() {
+		if a == NegativeZero && b == NegativeZero {
+			return NegativeZero
+		}
+		return PositiveZero
+	}
 	if a.IsZero() {
 		return b
 	}
@@ -156,13 +167,13 @@ func addAlgorithmic(a, b Float8) Float8 {
 		return a
 	}
 
-	// Handle infinity cases
+	// Handle infinity cases: Inf + (-Inf) = NaN
 	if a.IsInf() || b.IsInf() {
 		if a == PositiveInfinity && b == NegativeInfinity {
-			return PositiveZero // NaN case, but we return zero
+			return NaN
 		}
 		if a == NegativeInfinity && b == PositiveInfinity {
-			return PositiveZero // NaN case, but we return zero
+			return NaN
 		}
 		if a.IsInf() {
 			return a
@@ -179,7 +190,18 @@ func addAlgorithmic(a, b Float8) Float8 {
 }
 
 func subAlgorithmic(a, b Float8) Float8 {
-	// Handle special cases
+	// Handle NaN cases first — NaN propagates through all operations
+	if a.IsNaN() || b.IsNaN() {
+		return NaN
+	}
+
+	// Handle zero cases with IEEE 754 sign rules: (-0) - (-0) = +0
+	if a.IsZero() && b.IsZero() {
+		if a == NegativeZero && b != NegativeZero {
+			return NegativeZero
+		}
+		return PositiveZero
+	}
 	if b.IsZero() {
 		return a
 	}
@@ -187,10 +209,10 @@ func subAlgorithmic(a, b Float8) Float8 {
 		return b.Neg()
 	}
 
-	// Handle infinity cases
+	// Handle infinity cases: Inf - Inf = NaN
 	if a.IsInf() || b.IsInf() {
 		if a == b && a.IsInf() {
-			return PositiveZero // NaN case, but we return zero
+			return NaN
 		}
 		if a.IsInf() {
 			return a
